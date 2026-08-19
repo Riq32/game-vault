@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/* Define your custom colors here instead of tailwind.config.js */
+@theme {
+  --color-dark: #0f172a;    /* Slate 900 */
+  --color-card: #1e293b;    /* Slate 800 */
+  --color-accent: #38bdf8;  /* Light Blue 400 */
+  --color-success: #22c55e;
+}
+
+body {
+  @apply bg-dark text-slate-200 font-sans antialiased selection:bg-accent selection:text-dark;
+}
