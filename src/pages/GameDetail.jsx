@@ -87,11 +87,11 @@ export default function GameDetail() {
                 onChange={handleStatusChange}
               >
                 <option value="" disabled className="text-slate-500 font-medium">+ Add to Library</option>
-                <option value="want_to_play" className="text-slate-900 font-medium">📌 Want to Play</option>
-                <option value="playing" className="text-slate-900 font-medium">🎮 Currently Playing</option>
-                <option value="completed" className="text-slate-900 font-medium">🏆 Completed</option>
-                <option value="dropped" className="text-slate-900 font-medium">🛑 Dropped</option>
-                {currentStatus && <option value="remove" className="text-red-600 font-bold">❌ Remove from Library</option>}
+                <option value="want_to_play" className="text-slate-900 font-medium">Want to Play</option>
+                <option value="playing" className="text-slate-900 font-medium">Currently Playing</option>
+                <option value="completed" className="text-slate-900 font-medium">Completed</option>
+                <option value="dropped" className="text-slate-900 font-medium">Dropped</option>
+                {currentStatus && <option value="remove" className="text-red-600 font-bold">Remove from Library</option>}
               </select>
               {/* Custom SVG Arrow overlay since appearance-none hides the default one */}
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-900 dark:text-white">

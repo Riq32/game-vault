@@ -11,14 +11,23 @@ export default function Home() {
   const { data: gamesData, loading: gamesLoading, error: gamesError } = useFetch(() => fetchTrendingGames(selectedGenre), selectedGenre);
   const { data: genresData } = useFetch(fetchGenres);
 
+  // Unified button classes for perfect contrast matching
+  const getButtonClass = (isActive) => `
+    text-left px-4 py-3 rounded-xl whitespace-nowrap font-medium transition-all duration-300 border
+    ${isActive 
+      ? 'bg-primary border-primary text-white shadow-md shadow-primary/20' 
+      : 'bg-light-card dark:bg-dark-card border-light-border dark:border-dark-border text-slate-700 dark:text-slate-200 hover:border-primary/50 dark:hover:bg-zinc-800'
+    }
+  `;
+
   return (
     <main className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row gap-8 animate-fade-in">
       <aside className="w-full md:w-64 flex-shrink-0 animate-slide-up">
-        <h2 className="text-sm font-bold mb-4 text-slate-500 dark:text-slate-400 uppercase tracking-widest">Categories</h2>
+        <h2 className="text-sm font-bold mb-4 text-slate-500 dark:text-slate-300 uppercase tracking-widest drop-shadow-sm">Categories</h2>
         <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-4 md:pb-0 scrollbar-hide">
           <button 
             onClick={() => setSelectedGenre('')}
-            className={`text-left px-4 py-3 rounded-xl whitespace-nowrap font-medium transition-all duration-300 ${selectedGenre === '' ? 'bg-primary text-white shadow-md' : 'bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-primary/50'}`}
+            className={getButtonClass(selectedGenre === '')}
           >
             🔥 All Trending
           </button>
@@ -26,7 +35,7 @@ export default function Home() {
             <button
               key={genre.id}
               onClick={() => setSelectedGenre(genre.id)}
-              className={`text-left px-4 py-3 rounded-xl whitespace-nowrap font-medium transition-all duration-300 ${selectedGenre === genre.id ? 'bg-primary text-white shadow-md' : 'bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-primary/50 text-slate-700 dark:text-slate-300'}`}
+              className={getButtonClass(selectedGenre === genre.id)}
             >
               {genre.name}
             </button>
@@ -35,7 +44,7 @@ export default function Home() {
       </aside>
 
       <div className="flex-grow min-w-0">
-        <h1 className="text-4xl font-black mb-8 tracking-tight text-slate-900 dark:text-white animate-slide-up">
+        <h1 className="text-4xl font-black mb-8 tracking-tight text-slate-900 dark:text-white drop-shadow-sm animate-slide-up">
           {selectedGenre && genresData ? genresData.results.find(g => g.id === selectedGenre)?.name : 'Trending Masterpieces'}
         </h1>
         

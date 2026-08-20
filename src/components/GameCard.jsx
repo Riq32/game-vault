@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function GameCard({ game, onDrop }) {
   const handleDrop = (e) => {
-    e.preventDefault(); // Prevent navigating to GameDetail when clicking the button
+    e.preventDefault();
     if (onDrop) onDrop(game);
   };
 
@@ -27,21 +27,20 @@ export default function GameCard({ game, onDrop }) {
         
         <div className="flex flex-col gap-3">
           <div className="flex justify-between items-center text-sm font-semibold">
-            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+            <span className="flex items-center gap-1 text-slate-700 dark:text-slate-200">
               ⭐ {game.rating || 'N/A'}
             </span>
             {game.metacritic && (
-              <span className="bg-slate-100 dark:bg-dark-bg px-2.5 py-1 rounded-md text-success border border-success/20 shadow-sm">
+              <span className="bg-slate-100 dark:bg-zinc-800 px-2.5 py-1 rounded-md text-success border border-success/30 shadow-sm">
                 {game.metacritic}
               </span>
             )}
           </div>
           
-          {/* Quick Drop Action - Only renders in My Library */}
           {onDrop && game.status !== 'dropped' && (
             <button 
               onClick={handleDrop}
-              className="mt-2 w-full py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors border border-red-200 dark:border-red-900/50"
+              className="mt-2 w-full py-2 rounded-lg bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors border border-red-200 dark:border-red-800/50"
             >
               Move to Dropped
             </button>
