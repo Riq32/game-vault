@@ -3,7 +3,7 @@ import { useBacklog } from '../hooks/useBacklog';
 import GameCard from '../components/GameCard';
 
 export default function Backlog() {
-  const { backlog } = useBacklog();
+  const { backlog, updateGameStatus } = useBacklog();
   const [activeTab, setActiveTab] = useState('all');
 
   const tabs = [
@@ -33,7 +33,7 @@ export default function Backlog() {
             className={`px-6 py-2.5 rounded-full font-semibold transition-all duration-300 border ${
               activeTab === tab.id 
                 ? 'bg-primary border-primary text-white shadow-lg shadow-primary/30' 
-                : 'bg-light-card dark:bg-dark-card border-light-border dark:border-dark-border text-slate-600 dark:text-slate-300 hover:border-primary/50'
+                : 'bg-white dark:bg-dark-card border-slate-300 dark:border-dark-border text-slate-700 dark:text-slate-300 hover:border-primary/50'
             }`}
           >
             {tab.label}
@@ -42,7 +42,7 @@ export default function Backlog() {
       </div>
 
       {displayedGames.length === 0 ? (
-        <div className="text-center py-24 text-slate-500 border-2 border-dashed border-light-border dark:border-dark-border rounded-3xl bg-light-card/50 dark:bg-dark-card/50 backdrop-blur-sm animate-slide-up">
+        <div className="text-center py-24 text-slate-500 border-2 border-dashed border-slate-300 dark:border-dark-border rounded-3xl bg-white/50 dark:bg-dark-card/50 backdrop-blur-sm animate-slide-up">
           <p className="text-xl font-semibold mb-2">No games found.</p>
           <p>Search for games and add them to this category.</p>
         </div>
@@ -50,7 +50,10 @@ export default function Backlog() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {displayedGames.map((game, index) => (
             <div key={game.id} style={{ animationDelay: `${index * 50}ms` }}>
-              <GameCard game={game} />
+              <GameCard 
+                game={game} 
+                onDrop={game.status !== 'dropped' ? (g) => updateGameStatus(g, 'dropped') : undefined} 
+              />
             </div>
           ))}
         </div>
