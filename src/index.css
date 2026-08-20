@@ -1,21 +1,23 @@
 @import "tailwindcss";
 
+/* THIS IS THE FIX: Tells Tailwind v4 to listen to our toggle switch class */
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "San Francisco", "Inter", "Helvetica Neue", Helvetica, sans-serif;
   
- 
-  --color-primary: #0e9f6e;       /* Emerald Green from the button */
+  --color-primary: #0e9f6e;       
   --color-primary-hover: #057a55; 
   
-  --color-dark-bg: #0f172a;       /* Deep Navy */
+  --color-dark-bg: #0f172a;       
   --color-dark-card: #1e293b;     
   --color-dark-border: #334155;   
   
-  --color-light-bg: #f3f4f6;      /* Soft Light Gray/Off-White */
+  --color-light-bg: #f3f4f6;      
   --color-light-card: #ffffff;    
   --color-light-border: #e5e7eb;  
   
-  --color-text-main: #111827;     /* Very dark slate for headers */
+  --color-text-main: #111827;     
 }
 
 @layer utilities {
