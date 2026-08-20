@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-
+/* Dark mode toggle */
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
