@@ -6,8 +6,10 @@ import GameDetail from './pages/GameDetail';
 import Backlog from './pages/Backlog';
 
 export default function App() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col transition-colors duration-500">
       <Navbar />
       <div className="flex-grow">
         <Routes>
@@ -17,8 +19,8 @@ export default function App() {
           <Route path="/backlog" element={<Backlog />} />
         </Routes>
       </div>
-      <footer className="border-t border-slate-200 dark:border-slate-800 text-center py-8 text-slate-500 font-medium mt-12 bg-white dark:bg-slate-900/50 transition-colors duration-300">
-        <p>Phase 1 Capstone Project • Powered by RAWG API</p>
+      <footer className="border-t border-light-border dark:border-dark-border text-center py-8 text-slate-500 dark:text-slate-400 font-medium mt-12 bg-light-card/50 dark:bg-dark-bg/80 backdrop-blur-md transition-colors duration-500">
+        <p>&copy; {currentYear} GameVault. All rights reserved.</p>
       </footer>
     </div>
   );

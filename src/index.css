@@ -2,23 +2,60 @@
 
 @theme {
   /* Apple-based UI Font Stack */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "San Francisco", "Inter", "Helvetica Neue", Helvetica, sans-serif;
   
-  /* Custom Color Palette */
-  --color-dark: #0f172a;    
-  --color-card: #1e293b;    
-  --color-accent: #007aff; /* Apple System Blue */
-  --color-success: #34c759; /* Apple System Green */
+  /* High-Contrast Gaming Palette */
+  --color-primary: #6366f1;       /* Vibrant Indigo */
+  --color-primary-hover: #4f46e5; 
+  
+  --color-dark-bg: #09090b;       /* Deep Zinc */
+  --color-dark-card: #18181b;     
+  --color-dark-border: #27272a;   
+  
+  --color-light-bg: #f1f5f9;      /* Soft Slate */
+  --color-light-card: #ffffff;    
+  --color-light-border: #e2e8f0;  
+  
+  --color-success: #10b981;       /* Emerald */
+}
+
+/* Custom Animations */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .animate-stagger {
+    animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @layer base {
-  /* Default (Light Mode) */
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased transition-colors duration-300;
+    @apply text-slate-900 font-sans antialiased transition-colors duration-500 min-h-screen;
+    /* Light Mode Background Image with heavy white overlay for contrast */
+    background-image: linear-gradient(rgba(241, 245, 249, 0.95), rgba(241, 245, 249, 0.97)), url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop');
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
   }
   
-  /* Dark Mode */
   .dark body {
-    @apply bg-dark text-slate-100;
+    @apply text-slate-100;
+    /* Dark Mode Background Image with heavy black overlay for contrast */
+    background-image: linear-gradient(rgba(9, 9, 11, 0.90), rgba(9, 9, 11, 0.98)), url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop');
   }
 }
