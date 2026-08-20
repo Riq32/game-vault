@@ -18,8 +18,15 @@ export default function Navbar() {
   return (
     <nav className="bg-white/95 dark:bg-dark-bg/95 backdrop-blur-xl fixed w-full top-0 z-50 border-b border-light-border dark:border-dark-border transition-colors duration-500 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <Link to="/" className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors">
-          <span className="text-primary">🎮</span> GameVault
+        
+        {/* Updated Logo Section */}
+        <Link to="/" className="text-2xl font-black flex items-center gap-3 tracking-tight text-slate-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors group">
+          <img 
+            src="https://images.unsplash.com/photo-1567446537708-ac4aa75c9c28?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+            alt="GameVault Logo" 
+            className="h-10 w-10 object-cover rounded-xl shadow-sm border border-light-border dark:border-dark-border group-hover:border-primary transition-colors"
+          />
+          GameVault
         </Link>
         
         <form onSubmit={handleSearch} className="flex w-full md:w-1/2">
