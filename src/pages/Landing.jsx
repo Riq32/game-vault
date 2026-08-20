@@ -16,7 +16,7 @@ export default function Landing() {
           <div className="max-w-2xl">
             <p className="text-primary font-bold tracking-widest text-sm uppercase mb-4 drop-shadow-md">Welcome to GameVault</p>
             <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[1.05] mb-6">
-              Where could you <br /> play better?
+              Stop searching.<br /> Start playing.
             </h1>
             <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-xl font-medium">
               Find the masterpieces that fit your life, your backlog, your priorities, and the way you want to game.
@@ -43,7 +43,7 @@ export default function Landing() {
               <span className="w-2 h-2 rounded-full bg-primary"></span> Your Next Adventure
             </p>
             <h2 className="text-5xl font-black text-slate-900 dark:text-white leading-tight mb-8">
-              Could be <br /> anything.
+              A universe<br /> of games.
             </h2>
             <div className="flex items-center gap-3 text-slate-500 font-bold text-sm">
               <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"></span> 
