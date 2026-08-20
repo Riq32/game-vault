@@ -5,25 +5,24 @@ import GameCard from '../components/GameCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
-export default function Home() {
+export default function Discover() {
   const [selectedGenre, setSelectedGenre] = useState('');
   
   const { data: gamesData, loading: gamesLoading, error: gamesError } = useFetch(() => fetchTrendingGames(selectedGenre), selectedGenre);
   const { data: genresData } = useFetch(fetchGenres);
 
-  // Unified button classes for perfect contrast matching
   const getButtonClass = (isActive) => `
-    text-left px-4 py-3 rounded-xl whitespace-nowrap font-medium transition-all duration-300 border
+    text-left px-5 py-2.5 rounded-full whitespace-nowrap font-bold transition-all duration-300 text-sm border
     ${isActive 
-      ? 'bg-primary border-primary text-white shadow-md shadow-primary/20' 
-      : 'bg-light-card dark:bg-dark-card border-light-border dark:border-dark-border text-slate-700 dark:text-slate-200 hover:border-primary/50 dark:hover:bg-zinc-800'
+      ? 'bg-primary border-primary text-white shadow-md shadow-primary/30' 
+      : 'bg-white dark:bg-dark-card border-light-border dark:border-dark-border text-slate-800 dark:text-slate-200 hover:border-primary/50 dark:hover:bg-slate-800'
     }
   `;
 
   return (
     <main className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row gap-8 animate-fade-in">
       <aside className="w-full md:w-64 flex-shrink-0 animate-slide-up">
-        <h2 className="text-sm font-bold mb-4 text-slate-500 dark:text-slate-300 uppercase tracking-widest drop-shadow-sm">Categories</h2>
+        <h3 className="text-xs font-bold mb-5 text-slate-500 dark:text-slate-300 uppercase tracking-widest drop-shadow-sm">Browse Categories</h3>
         <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-4 md:pb-0 scrollbar-hide">
           <button 
             onClick={() => setSelectedGenre('')}

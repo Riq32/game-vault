@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
+import Landing from './pages/Landing';
+import Discover from './pages/Discover';
 import Search from './pages/Search';
 import GameDetail from './pages/GameDetail';
 import Backlog from './pages/Backlog';
@@ -9,11 +10,12 @@ export default function App() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="min-h-screen flex flex-col transition-colors duration-500">
+    <div className="min-h-screen flex flex-col transition-colors duration-500 pt-24">
       <Navbar />
       <div className="flex-grow">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/discover" element={<Discover />} />
           <Route path="/search" element={<Search />} />
           <Route path="/game/:id" element={<GameDetail />} />
           <Route path="/backlog" element={<Backlog />} />
