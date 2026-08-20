@@ -10,16 +10,30 @@ export function useBacklog() {
     localStorage.setItem('gamevault_backlog', JSON.stringify(backlog));
   }, [backlog]);
 
-  const toggleBacklog = (game) => {
+  const updateGameStatus = (game, status) => {
     setBacklog(prev => {
       const exists = prev.find(g => g.id === game.id);
-      if (exists) return prev.filter(g => g.id !== game.id);
-      // Save only necessary data to prevent local storage bloat
-      return [...prev, { id: game.id, name: game.name, background_image: game.background_image }];
+      if (exists) {
+        return prev.map(g => g.id === game.id ? { ...g, status } : g);
+      }
+      return [...prev, { 
+        id: game.id, 
+        name: game.name, 
+        background_image: game.background_image,
+        rating: game.rating,
+        status 
+      }];
     });
   };
 
-  const isInBacklog = (id) => backlog.some(g => g.id === id);
+  const removeGame = (id) => {
+    setBacklog(prev => prev.filter(g => g.id !== id));
+  };
 
-  return { backlog, toggleBacklog, isInBacklog };
+  const getGameStatus = (id) => {
+    const game = backlog.find(g => g.id === id);
+    return game ? game.status : null;
+  };
+
+  return { backlog, updateGameStatus, removeGame, getGameStatus };
 }

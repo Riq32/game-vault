@@ -1,22 +1,24 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Navbar() {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query)}`);
-      setQuery(''); // clear after search
+      setQuery(''); 
     }
   };
 
   return (
-    <nav className="bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-800 p-4">
+    <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 p-4 transition-colors duration-300">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <Link to="/" className="text-2xl font-black text-white flex items-center gap-2 tracking-tight hover:text-accent transition-colors">
+        <Link to="/" className="text-2xl font-black flex items-center gap-2 tracking-tight hover:text-accent transition-colors">
           <span className="text-accent">🎮</span> GameVault
         </Link>
         
@@ -24,18 +26,27 @@ export default function Navbar() {
           <input 
             type="text" 
             placeholder="Search for games..." 
-            className="w-full px-4 py-2 rounded-l-lg bg-slate-800 text-white border border-slate-700 focus:outline-none focus:border-accent transition-colors"
+            className="w-full px-4 py-2.5 rounded-l-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-accent transition-colors"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button type="submit" className="bg-accent hover:bg-sky-500 text-dark px-6 py-2 rounded-r-lg font-bold transition-colors">
+          <button type="submit" className="bg-accent hover:bg-blue-600 text-white px-6 py-2.5 rounded-r-xl font-bold transition-colors">
             Search
           </button>
         </form>
 
-        <Link to="/backlog" className="font-semibold text-slate-300 hover:text-white transition-colors">
-          My Backlog
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link to="/backlog" className="font-semibold text-slate-600 hover:text-accent dark:text-slate-300 dark:hover:text-white transition-colors">
+            My Backlog
+          </Link>
+          <button 
+            onClick={toggleTheme}
+            className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-xl hover:scale-110 transition-transform"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+        </div>
       </div>
     </nav>
   );

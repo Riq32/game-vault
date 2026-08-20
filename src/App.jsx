@@ -17,8 +17,8 @@ export default function App() {
           <Route path="/backlog" element={<Backlog />} />
         </Routes>
       </div>
-      <footer className="bg-slate-900 border-t border-slate-800 text-center py-6 text-slate-500 mt-12">
-        <p>Phase 1 Capstone Project • Data provided by RAWG API</p>
+      <footer className="border-t border-slate-200 dark:border-slate-800 text-center py-8 text-slate-500 font-medium mt-12 bg-white dark:bg-slate-900/50 transition-colors duration-300">
+        <p>Phase 1 Capstone Project • Powered by RAWG API</p>
       </footer>
     </div>
   );

@@ -1,13 +1,24 @@
 @import "tailwindcss";
 
-/* Define your custom colors here instead of tailwind.config.js */
 @theme {
-  --color-dark: #0f172a;    /* Slate 900 */
-  --color-card: #1e293b;    /* Slate 800 */
-  --color-accent: #38bdf8;  /* Light Blue 400 */
-  --color-success: #22c55e;
+  /* Apple-based UI Font Stack */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  
+  /* Custom Color Palette */
+  --color-dark: #0f172a;    
+  --color-card: #1e293b;    
+  --color-accent: #007aff; /* Apple System Blue */
+  --color-success: #34c759; /* Apple System Green */
 }
 
-body {
-  @apply bg-dark text-slate-200 font-sans antialiased selection:bg-accent selection:text-dark;
+@layer base {
+  /* Default (Light Mode) */
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased transition-colors duration-300;
+  }
+  
+  /* Dark Mode */
+  .dark body {
+    @apply bg-dark text-slate-100;
+  }
 }

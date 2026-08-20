@@ -16,12 +16,12 @@ export default function Search() {
 
   return (
     <main className="max-w-7xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 border-b border-slate-700 pb-4">
+      <h1 className="text-3xl font-bold mb-8 border-b border-slate-200 dark:border-slate-800 pb-4 tracking-tight">
         Search Results for: <span className="text-accent">"{query}"</span>
       </h1>
       
       {data?.results.length === 0 ? (
-        <div className="text-center py-20 text-slate-400 text-xl">
+        <div className="text-center py-20 text-slate-500 text-xl font-medium">
           No games found. Try a different search term.
         </div>
       ) : (
