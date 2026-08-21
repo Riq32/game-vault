@@ -2,7 +2,7 @@
 
 GameVault is a sleek, high-contrast digital library designed for PC and console gamers to discover new releases and seamlessly organize their gaming backlog. 
 
-This application was developed as a Phase 1 capstone project by Mwapahe Moses Chengo.
+This application was developed as a Phase 1 capstone project by Enrique Pim.
 
 ## 🎯 The Problem & Solution
 Gamers frequently buy titles across multiple platforms, lose track of their digital libraries, and suffer from choice paralysis when deciding what to play next. 
