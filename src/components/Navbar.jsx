@@ -1,77 +1,51 @@
-import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useTheme } from '../hooks/useTheme';
+// src/components/Navbar.jsx
+import { NavLink, Link } from 'react-router-dom';
+import { Search, Compass, Library, User } from 'lucide-react';
 
 export default function Navbar() {
-  const [query, setQuery] = useState('');
-  const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-      setQuery(''); 
-    }
-  };
+  const navLinkStyle = ({ isActive }) => 
+    `flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+      isActive 
+        ? 'bg-[var(--color-neon-cyan)]/10 text-[var(--color-neon-cyan)] border border-[var(--color-neon-cyan)]/30' 
+        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-vault-surface-hover)]'
+    }`;
 
   return (
-    <nav className="bg-white/95 dark:bg-dark-bg/95 backdrop-blur-xl fixed w-full top-0 z-50 border-b border-light-border dark:border-dark-border transition-colors duration-500 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+    <nav className="fixed top-0 w-full z-50 bg-[var(--color-vault-black)]/80 backdrop-blur-lg border-b border-[var(--color-vault-border)]">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         
-        {/* Updated Logo Section */}
-        <Link to="/" className="text-2xl font-black flex items-center gap-3 tracking-tight text-slate-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors group">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3 group">
           <img 
-            src="https://images.unsplash.com/photo-1567446537708-ac4aa75c9c28?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-            alt="GameVault Logo" 
-            className="h-10 w-10 object-cover rounded-xl shadow-sm border border-light-border dark:border-dark-border group-hover:border-primary transition-colors"
+            src="/image_0bcf85.png" 
+            alt="Game Vault" 
+            className="h-8 object-contain transition-transform group-hover:scale-105" 
           />
-          GameVault
         </Link>
-        
-        <form onSubmit={handleSearch} className="flex w-full md:w-1/2">
-          <input 
-            type="text" 
-            placeholder="Search for games..." 
-            className="w-full px-6 py-2.5 rounded-l-full bg-light-bg dark:bg-dark-card border border-light-border dark:border-dark-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-slate-900 dark:text-white shadow-inner font-medium placeholder-slate-500"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <button type="submit" className="bg-primary hover:bg-primary-hover text-white px-8 py-2.5 rounded-r-full font-bold transition-colors shadow-md">
-            Search
-          </button>
-        </form>
 
-        <div className="flex items-center gap-3">
-          <NavLink 
-            to="/discover" 
-            className={({ isActive }) => `px-6 py-2.5 rounded-full font-bold transition-all duration-300 text-sm ${
-              isActive 
-                ? 'bg-primary text-white shadow-md' 
-                : 'text-slate-700 dark:text-slate-200 hover:bg-light-bg dark:hover:bg-dark-card'
-            }`}
-          >
-            Discover
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-2 bg-[var(--color-vault-surface)] p-1 rounded-full border border-[var(--color-vault-border)]">
+          <NavLink to="/discover" className={navLinkStyle}>
+            <Compass size={16} /> Discover
           </NavLink>
-          <NavLink 
-            to="/backlog" 
-            className={({ isActive }) => `px-6 py-2.5 rounded-full font-bold transition-all duration-300 text-sm ${
-              isActive 
-                ? 'bg-primary text-white shadow-md' 
-                : 'text-slate-700 dark:text-slate-200 hover:bg-light-bg dark:hover:bg-dark-card'
-            }`}
-          >
-            My Library
+          <NavLink to="/search" className={navLinkStyle}>
+            <Search size={16} /> Search
           </NavLink>
-          
-          <button 
-            onClick={toggleTheme}
-            className="p-2.5 rounded-full bg-light-bg dark:bg-dark-card border border-light-border dark:border-dark-border text-xl hover:scale-110 transition-transform shadow-sm flex items-center justify-center w-11 h-11"
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
+          <NavLink to="/backlog" className={navLinkStyle}>
+            <Library size={16} /> Vault
+          </NavLink>
         </div>
+
+        {/* Profile / Auth Action */}
+        <div className="flex items-center">
+          <Link to="/auth" className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] transition-colors">
+            <div className="w-10 h-10 rounded-full bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] flex items-center justify-center group-hover:border-[var(--color-neon-cyan)]">
+              <User size={18} />
+            </div>
+            <span className="hidden sm:block">Sign In</span>
+          </Link>
+        </div>
+
       </div>
     </nav>
   );
