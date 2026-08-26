@@ -1,25 +1,84 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Settings, Gamepad2, Trophy, Clock, Target } from 'lucide-react';
+import { User, Settings, Gamepad2, Trophy, Clock, Target, Loader2, AlertCircle, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // NEW: Import the global auth hook
 
 export default function Profile() {
-  // Mock data to hold the UI structure until connected to Flask
-  const user = {
-    username: "VaultHunter99",
-    joinDate: "August 2026",
-    platforms: ["PS5", "Steam Deck", "Switch", "PC"],
-    stats: {
-      total: 142,
-      completed: 87,
-      playing: 3,
-      backlog: 52
-    }
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  const navigate = useNavigate();
+  const { logout } = useAuth(); // NEW: Destructure the global logout function
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        navigate('/auth');
+        return;
+      }
+
+      try {
+        const response = await axios.get('http://localhost:5000/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setProfileData(response.data);
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+        setError('Failed to decrypt vault identity. Please log in again.');
+        if (err.response && err.response.status === 401) {
+          logout(); // Use context logout if token is expired/invalid
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [navigate, logout]);
+
+  const handleLogout = () => {
+    logout(); // NEW: This clears global state AND localStorage instantly
+    navigate('/auth');
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--color-vault-black)] pt-32 flex flex-col items-center justify-center">
+        <Loader2 className="animate-spin text-[var(--color-neon-cyan)] mb-4" size={48} />
+        <p className="text-[var(--color-text-secondary)] font-bold tracking-widest uppercase text-sm">Decrypting Identity...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[var(--color-vault-black)] pt-32 flex flex-col items-center justify-center px-6">
+        <div className="bg-red-500/10 border border-red-500/50 p-6 rounded-2xl flex flex-col items-center text-center max-w-md">
+          <AlertCircle className="text-red-500 mb-4" size={48} />
+          <p className="text-red-500 font-bold mb-6">{error}</p>
+          <button 
+            onClick={() => navigate('/auth')}
+            className="bg-red-500 text-black px-6 py-2 rounded-full font-black uppercase tracking-wider text-sm hover:scale-105 transition-transform"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profileData) return null;
+
   const statCards = [
-    { label: "Total Tracked", value: user.stats.total, icon: <Gamepad2 size={20} />, color: "text-white" },
-    { label: "Completed", value: user.stats.completed, icon: <Trophy size={20} />, color: "text-yellow-400" },
-    { label: "Currently Playing", value: user.stats.playing, icon: <Target size={20} />, color: "text-[var(--color-neon-cyan)]" },
-    { label: "Backlog", value: user.stats.backlog, icon: <Clock size={20} />, color: "text-zinc-400" }
+    { label: "Total Tracked", value: profileData.stats.total, icon: <Gamepad2 size={20} />, color: "text-white" },
+    { label: "Completed", value: profileData.stats.completed, icon: <Trophy size={20} />, color: "text-yellow-400" },
+    { label: "Currently Playing", value: profileData.stats.playing, icon: <Target size={20} />, color: "text-[var(--color-neon-cyan)]" },
+    { label: "Backlog", value: profileData.stats.backlog, icon: <Clock size={20} />, color: "text-zinc-400" }
   ];
 
   return (
@@ -40,24 +99,37 @@ export default function Profile() {
           </div>
           
           <div className="flex-grow text-center md:text-left">
-            <h1 className="text-4xl font-black uppercase tracking-tight mb-2">{user.username}</h1>
+            <h1 className="text-4xl font-black uppercase tracking-tight mb-2">{profileData.username}</h1>
             <p className="text-[var(--color-text-secondary)] font-bold uppercase tracking-widest text-sm mb-6">
-              Vault Member since {user.joinDate}
+              Vault Member since {profileData.joinDate}
             </p>
             
             {/* Hardware Tags */}
             <div className="flex flex-wrap justify-center md:justify-start gap-2">
-              {user.platforms.map(platform => (
-                <span key={platform} className="bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-secondary)] text-xs font-bold px-3 py-1.5 rounded-full uppercase">
-                  {platform}
-                </span>
-              ))}
+              {profileData.platforms && profileData.platforms.length > 0 ? (
+                profileData.platforms.map(platform => (
+                  <span key={platform} className="bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-secondary)] text-xs font-bold px-3 py-1.5 rounded-full uppercase">
+                    {platform}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[var(--color-text-secondary)] text-sm italic">No hardware preferences recorded.</span>
+              )}
             </div>
           </div>
 
-          <button className="bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] hover:border-[var(--color-neon-cyan)] text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] p-3 rounded-xl transition-colors self-start md:self-center hidden md:block">
-            <Settings size={20} />
-          </button>
+          <div className="flex gap-3 self-start md:self-center hidden md:flex">
+            <button className="bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] hover:border-[var(--color-neon-cyan)] text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] p-3 rounded-xl transition-colors" title="Settings">
+              <Settings size={20} />
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="bg-[var(--color-vault-black)] border border-red-500/50 hover:border-red-500 text-red-500/80 hover:text-red-500 p-3 rounded-xl transition-colors" 
+              title="Terminate Connection"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
