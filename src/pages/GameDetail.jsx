@@ -1,28 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ShoppingCart, Languages, MessageSquare, Play, Calendar, Monitor, Image as ImageIcon } from 'lucide-react';
+import { Star, ShoppingCart, Languages, MessageSquare, Calendar, ImageIcon, Loader2 } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import { fetchGameDetails } from '../api'; 
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
+import axios from 'axios';
 
 export default function GameDetail() {
   const { id } = useParams();
   const { data: game, loading, error } = useFetch(() => fetchGameDetails(id), id);
   
-  // Feature States
+  // AI Translation States
   const [isTranslated, setIsTranslated] = useState(true);
-  const [reviewText, setReviewText] = useState('');
-  const [reviews, setReviews] = useState([
-    { id: 1, user: 'VaultHunter99', rating: 5, text: 'Absolute masterpiece. The world-building is unparalleled.', date: '2 days ago' },
-    { id: 2, user: 'PixelKnight', rating: 4, text: 'Great combat mechanics, but the pacing slows down in the third act.', date: '1 week ago' }
-  ]);
+  const [translatedText, setTranslatedText] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
 
-  // Mock Foreign Text for the AI Translate Feature
-  const foreignDescription = "このゲームは素晴らしいです！信じられないほどのグラフィックと没入感のあるストーリー。";
-  
-  // Fallback mock screenshots in case the API doesn't return them directly in the details object
+  // Review States
+  const [reviewText, setReviewText] = useState('');
+  const [rating, setRating] = useState(5);
+  const [reviews, setReviews] = useState([]);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Fetch reviews on component mount
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/reviews/${id}`);
+        setReviews(response.data);
+      } catch (err) {
+        console.error("Failed to load reviews:", err);
+      }
+    };
+    if (id) fetchReviews();
+  }, [id]);
+
   const previewImages = game?.short_screenshots || game?.screenshots || [
     { id: 1, image: game?.background_image },
     { id: 2, image: game?.background_image_additional || 'https://via.placeholder.com/600x400?text=Preview+Not+Found' }
@@ -32,20 +45,58 @@ export default function GameDetail() {
   if (error) return <div className="min-h-screen pt-32"><ErrorMessage message={error} /></div>;
   if (!game) return null;
 
-  const handleReviewSubmit = (e) => {
+  const handleTranslate = async () => {
+    if (isTranslated) {
+      if (translatedText) {
+        setIsTranslated(false);
+      } else {
+        setIsTranslating(true);
+        try {
+          const response = await axios.post('http://localhost:5000/api/translate', {
+            text: game.description
+          });
+          setTranslatedText(response.data.translated_text);
+          setIsTranslated(false);
+        } catch (err) {
+          console.error("AI Translation Error:", err);
+          alert("Failed to connect to the AI translation server.");
+        } finally {
+          setIsTranslating(false);
+        }
+      }
+    } else {
+      setIsTranslated(true);
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!reviewText.trim()) return;
-    
-    const newReview = {
-      id: Date.now(),
-      user: 'Current User', 
-      rating: 5,
-      text: reviewText,
-      date: 'Just now'
-    };
-    
-    setReviews([newReview, ...reviews]);
-    setReviewText('');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("Unauthorized Access. Please log in to transmit a review.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/reviews',
+        { game_id: id, rating: rating, text: reviewText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Optimistic update: Inject the new review into the feed dynamically
+      setReviews([response.data.review, ...reviews]);
+      setReviewText('');
+      setRating(5); // Reset stars
+    } catch (err) {
+      console.error(err);
+      alert("Failed to transmit review to central server.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   return (
@@ -84,27 +135,29 @@ export default function GameDetail() {
       {/* 2. MAIN CONTENT GRID */}
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
         
-        {/* LEFT COLUMN: About, Previews & Reviews */}
         <div className="lg:col-span-2 space-y-12">
           
           {/* AI Translation & Description */}
           <section className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-8 rounded-3xl relative overflow-hidden group">
             <div className="flex justify-between items-center mb-6 border-b border-[var(--color-vault-border)] pb-4">
               <h2 className="text-2xl font-black tracking-tight">Data Log</h2>
-              
               <button 
-                onClick={() => setIsTranslated(!isTranslated)}
-                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] px-4 py-2 rounded-full text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)] hover:text-black transition-colors"
+                onClick={handleTranslate}
+                disabled={isTranslating}
+                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] px-4 py-2 rounded-full text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)] hover:text-black transition-colors disabled:opacity-50"
               >
-                <Languages size={16} />
-                {isTranslated ? 'Original Text' : 'AI Translate'}
+                {isTranslating ? <Loader2 className="animate-spin" size={16} /> : <Languages size={16} />}
+                {isTranslating ? 'Processing...' : (isTranslated ? 'AI Translate (JP)' : 'View Original (EN)')}
               </button>
             </div>
-            
-            <p className="text-[var(--color-text-secondary)] leading-relaxed text-lg" dangerouslySetInnerHTML={{ __html: isTranslated ? game.description : foreignDescription }} />
+            <p 
+              className="text-[var(--color-text-secondary)] leading-relaxed text-lg transition-opacity duration-300" 
+              style={{ opacity: isTranslating ? 0.5 : 1 }}
+              dangerouslySetInnerHTML={{ __html: isTranslated ? game.description : translatedText }} 
+            />
           </section>
 
-          {/* Gameplay Previews (Screenshots) */}
+          {/* Gameplay Previews */}
           <section>
             <h2 className="text-3xl font-black tracking-tight mb-6 flex items-center gap-3">
               <ImageIcon className="text-[var(--color-neon-cyan)]" /> Visual Intel
@@ -144,36 +197,65 @@ export default function GameDetail() {
                 className="w-full bg-transparent text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] resize-none focus:outline-none min-h-[100px]"
               />
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-[var(--color-vault-border)]">
-                <div className="flex gap-1 text-[var(--color-text-secondary)]">
-                  {[1,2,3,4,5].map(star => <Star key={star} size={20} className="hover:text-[var(--color-neon-cyan)] cursor-pointer transition-colors" />)}
+                <div className="flex gap-2">
+                  {/* Interactive Star Rating */}
+                  {[1,2,3,4,5].map(star => (
+                    <Star 
+                      key={star} 
+                      size={24} 
+                      onClick={() => setRating(star)}
+                      className={`cursor-pointer transition-colors ${
+                        star <= rating 
+                          ? 'text-[var(--color-neon-cyan)] fill-[var(--color-neon-cyan)]' 
+                          : 'text-[var(--color-vault-border)] hover:text-[var(--color-neon-cyan)]'
+                      }`} 
+                    />
+                  ))}
                 </div>
-                <button type="submit" className="bg-[var(--color-neon-cyan)] text-black px-6 py-2 rounded-full font-black uppercase tracking-wider text-sm hover:scale-105 transition-transform disabled:opacity-50">
-                  Transmit
+                <button 
+                  type="submit" 
+                  disabled={isSubmittingReview}
+                  className="bg-[var(--color-neon-cyan)] text-black px-6 py-2 rounded-full font-black uppercase tracking-wider text-sm hover:scale-105 transition-transform disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSubmittingReview ? <Loader2 className="animate-spin" size={16} /> : 'Transmit'}
                 </button>
               </div>
             </form>
 
             <div className="space-y-4">
               <AnimatePresence>
-                {reviews.map((review) => (
-                  <motion.div 
-                    key={review.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-6 rounded-2xl flex gap-4"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] flex items-center justify-center flex-shrink-0">
-                      <span className="font-black text-[var(--color-neon-cyan)]">{review.user.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="font-bold text-[var(--color-text-primary)]">{review.user}</span>
-                        <span className="text-xs font-medium text-[var(--color-text-secondary)]">{review.date}</span>
-                      </div>
-                      <p className="text-[var(--color-text-secondary)] leading-relaxed">{review.text}</p>
-                    </div>
+                {reviews.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-[var(--color-text-secondary)] py-8 font-medium">
+                    No comm-link transmissions found. Be the first to review.
                   </motion.div>
-                ))}
+                ) : (
+                  reviews.map((review) => (
+                    <motion.div 
+                      key={review.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-6 rounded-2xl flex gap-4"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] flex items-center justify-center flex-shrink-0">
+                        <span className="font-black text-[var(--color-neon-cyan)] uppercase">{review.user.charAt(0)}</span>
+                      </div>
+                      <div className="w-full">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-[var(--color-text-primary)]">{review.user}</span>
+                            <span className="text-xs font-medium text-[var(--color-text-secondary)]">{review.date}</span>
+                          </div>
+                          <div className="flex">
+                            {[1,2,3,4,5].map(star => (
+                              <Star key={star} size={14} className={star <= review.rating ? 'text-[var(--color-neon-cyan)] fill-[var(--color-neon-cyan)]' : 'text-[var(--color-vault-border)]'} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-[var(--color-text-secondary)] leading-relaxed">{review.text}</p>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
               </AnimatePresence>
             </div>
           </section>
@@ -181,8 +263,6 @@ export default function GameDetail() {
 
         {/* RIGHT COLUMN: Stores & Meta Details */}
         <div className="space-y-6">
-          
-          {/* Marketplaces */}
           <div className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-6 rounded-3xl">
             <h3 className="text-xl font-black mb-6 tracking-tight flex items-center gap-2 border-b border-[var(--color-vault-border)] pb-4">
               <ShoppingCart size={20} className="text-[var(--color-neon-cyan)]" /> Marketplaces
@@ -208,14 +288,12 @@ export default function GameDetail() {
             </div>
           </div>
 
-          {/* Quick Meta Stats & Platform Release Dates */}
           <div className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-6 rounded-3xl space-y-6">
             <div>
               <span className="text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-widest block mb-1">Developer</span>
               <span className="font-bold text-lg">{game.developers?.[0]?.name || 'Unknown'}</span>
             </div>
             
-            {/* NEW: Platform Specific Release (Sell) Dates */}
             <div>
               <span className="text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-widest block mb-3 flex items-center gap-2">
                 <Calendar size={14} /> Platform Sell Dates
@@ -234,7 +312,6 @@ export default function GameDetail() {
               </div>
             </div>
           </div>
-          
         </div>
       </div>
     </div>

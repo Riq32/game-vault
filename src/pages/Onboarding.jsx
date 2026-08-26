@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Gamepad2, ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react';
+import axios from 'axios';
 
 // Categorized hardware based on your master list
 const PLATFORMS = [
@@ -32,6 +33,8 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const toggleSelection = (item, list, setList) => {
@@ -42,14 +45,37 @@ export default function Onboarding() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    setError('');
+    
     const userPreferences = { platforms: selectedPlatforms, genres: selectedGenres };
-    
-    // Phase 2 TODO: POST this data to your Flask backend to save to the User profile
-    console.log("Saving user preferences:", userPreferences);
-    
-    // Send them to the personalized discover page
-    navigate('/discover');
+    const token = localStorage.getItem('token'); 
+
+    if (!token) {
+      setError("Authentication error. Please log in again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await axios.post(
+        'http://localhost:5000/api/preferences', 
+        userPreferences,
+        {
+          headers: {
+            Authorization: `Bearer ${token}` 
+          }
+        }
+      );
+      
+      // Successfully saved to PostgreSQL, send them to the discover page
+      navigate('/discover');
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save preferences to the server.");
+      setIsSubmitting(false);
+    }
   };
 
   // Animation variants for smooth step transitions
@@ -62,6 +88,13 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-[var(--color-vault-black)] pt-24 pb-12 px-6 flex flex-col items-center overflow-x-hidden">
       
+      {/* Error Banner */}
+      {error && (
+        <div className="w-full max-w-4xl bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-lg text-center mb-4 text-sm font-bold">
+          {error}
+        </div>
+      )}
+
       {/* Progress Indicator */}
       <div className="w-full max-w-4xl flex justify-between items-center mb-12">
         <div className="flex gap-2">
@@ -170,10 +203,10 @@ export default function Onboarding() {
           <button
             onClick={() => step === 1 ? setStep(2) : handleComplete()}
             className="flex items-center gap-2 bg-[var(--color-neon-cyan)] text-black px-8 py-3 rounded-full font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_20px_rgba(0,240,255,0.3)] disabled:opacity-50 disabled:hover:scale-100"
-            disabled={step === 1 ? selectedPlatforms.length === 0 : selectedGenres.length === 0}
+            disabled={isSubmitting || (step === 1 ? selectedPlatforms.length === 0 : selectedGenres.length === 0)}
           >
-            {step === 1 ? 'Continue' : 'Complete Setup'} 
-            {step === 1 ? <ChevronRight size={20} /> : <Sparkles size={20} />}
+            {isSubmitting ? 'Transmitting...' : step === 1 ? 'Continue' : 'Complete Setup'} 
+            {!isSubmitting && (step === 1 ? <ChevronRight size={20} /> : <Sparkles size={20} />)}
           </button>
         </div>
       </div>
