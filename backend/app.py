@@ -9,6 +9,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from openai import OpenAI
 
+# Explicitly load the backend .env file from the current directory
 load_dotenv()
 
 app = Flask(__name__)
@@ -37,7 +38,6 @@ def register():
     password = data.get('password')
     dob_str = data.get('dob')
 
-    # DOB is collected as a formality, but won't be used to censor games
     if not username or not password or not dob_str:
         return jsonify({"error": "Username, password, and Date of Birth are required"}), 400
 
@@ -82,33 +82,45 @@ def login():
     }), 200
 
 # ==========================================
-# UNRESTRICTED RAWG PROXY 
+# UNRESTRICTED RAWG PROXY (WITH DEBUG TRACE)
 # ==========================================
 @app.route('/api/games', methods=['GET'])
 def get_games():
     rawg_key = os.getenv('RAWG_API_KEY')
+    
+    # Secure diagnostic trace to verify key injection in terminal console
+    print(f"\n[DEBUG] Loaded RAWG_API_KEY: {rawg_key[:5] if rawg_key else 'NONE'}********\n")
+
     page = request.args.get('page', 1)
     search = request.args.get('search', '')
     
-    # Direct, unfiltered request to RAWG
     url = f"https://api.rawg.io/api/games?key={rawg_key}&page_size=24&page={page}"
     if search:
         url += f"&search={search}"
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=15)
+        response.raise_for_status() 
         return jsonify(response.json()), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except requests.exceptions.RequestException as e:
+        print(f"\n[RAWG API ERROR DETECTED]: {e}\n")
+        return jsonify({"error": "Failed to connect to RAWG."}), 502
+    except ValueError:
+        print("\n[RAWG API ERROR DETECTED]: Received non-JSON response payload.\n")
+        return jsonify({"error": "Invalid data from RAWG."}), 502
 
 @app.route('/api/games/<game_id>', methods=['GET'])
 def get_game_details(game_id):
     rawg_key = os.getenv('RAWG_API_KEY')
     try:
-        response = requests.get(f"https://api.rawg.io/api/games/{game_id}?key={rawg_key}")
+        response = requests.get(f"https://api.rawg.io/api/games/{game_id}?key={rawg_key}", timeout=15)
+        response.raise_for_status()
         return jsonify(response.json()), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except requests.exceptions.RequestException as e:
+        print(f"\n[RAWG API ERROR DETECTED]: {e}\n")
+        return jsonify({"error": "Failed to fetch game details."}), 502
+    except ValueError:
+        return jsonify({"error": "Invalid data from RAWG."}), 502
 
 # ==========================================
 # PROFILE & SETTINGS ROUTES
@@ -286,7 +298,7 @@ def get_recommendations():
     if platform_ids: url += f"&platforms={','.join(platform_ids)}"
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=15)
         return jsonify(response.json().get('results', [])), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
