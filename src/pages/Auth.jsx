@@ -1,92 +1,72 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Lock, ArrowRight, Gamepad2, AlertCircle, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus, AlertCircle, Terminal } from 'lucide-react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // NEW: Import the global auth hook
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', password: '', dob: '' });
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth(); // NEW: Destructure the global login function
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
-    
-    // Determine the correct Flask endpoint
-    const endpoint = isLogin 
-      ? 'http://localhost:5000/api/login' 
-      : 'http://localhost:5000/api/register';
-    
+    setLoading(true);
+
+    const url = isLogin ? 'http://localhost:5000/api/login' : 'http://localhost:5000/api/register';
+
     try {
-      const response = await axios.post(endpoint, formData);
+      // Send dob only during registration
+      const payload = isLogin ? { username: formData.username, password: formData.password } : formData;
+      const response = await axios.post(url, payload);
       
-      // NEW: Use the global context to set tokens and update the app state instantly
       login(response.data.access_token, response.data.user);
-      
-      // Route based on auth type
-      if (!isLogin) {
-        navigate('/onboarding');
-      } else {
-        navigate('/discover');
-      }
+      navigate(isLogin ? '/discover' : '/preferences');
     } catch (err) {
-      // Capture and display the exact error message sent from Flask
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(err.response.data.error);
-      } else {
-        setError('Server connection failed. Ensure the Flask backend is running.');
-      }
+      setError(err.response?.data?.error || 'Authentication failed. Server unreachable.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setFormData({ username: '', password: '' });
-    setError('');
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[var(--color-vault-black)] pt-20 px-6">
-      
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--color-neon-cyan)]/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-[var(--color-vault-black)]">
+      {/* Background Decor */}
+      <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-[var(--color-neon-cyan)]/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-[var(--color-neon-magenta)]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-md bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] rounded-2xl shadow-2xl overflow-hidden p-8"
+        className="w-full max-w-md bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-8 md:p-12 rounded-3xl shadow-2xl relative z-10"
       >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] mb-4 shadow-[0_0_15px_rgba(0,240,255,0.15)]">
-            <Gamepad2 className="text-[var(--color-neon-cyan)]" size={32} />
+        <div className="flex justify-center mb-8">
+          <div className="w-16 h-16 bg-[var(--color-vault-black)] border border-[var(--color-neon-cyan)] rounded-xl flex items-center justify-center transform rotate-12 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+            <Terminal className="text-[var(--color-neon-cyan)]" size={32} />
           </div>
-          <h2 className="text-3xl font-black text-[var(--color-text-primary)] uppercase tracking-tighter">
-            {isLogin ? 'Access Vault' : 'Create Identity'}
-          </h2>
-          <p className="text-[var(--color-text-secondary)] text-sm font-medium mt-2">
-            {isLogin ? 'Enter your credentials to continue.' : 'Join the elite tracking network.'}
-          </p>
         </div>
 
-        {/* Dynamic Error Banner */}
+        <h2 className="text-3xl font-black text-center uppercase tracking-tighter mb-2">
+          {isLogin ? 'Vault Access' : 'Create Identity'}
+        </h2>
+        <p className="text-[var(--color-text-secondary)] text-center text-sm font-medium tracking-widest uppercase mb-8">
+          {isLogin ? 'Authenticate to continue' : 'Register your credentials'}
+        </p>
+
         <AnimatePresence>
           {error && (
             <motion.div 
-              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
-              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm font-bold p-3 rounded-lg flex items-center gap-2"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-xl flex items-center gap-3 text-sm font-bold mb-6 overflow-hidden"
             >
-              <AlertCircle size={16} />
+              <AlertCircle size={18} className="flex-shrink-0" />
               {error}
             </motion.div>
           )}
@@ -94,70 +74,73 @@ export default function Auth() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <User className="text-[var(--color-text-secondary)] group-focus-within:text-[var(--color-neon-cyan)] transition-colors" size={20} />
-            </div>
             <input
               type="text"
               required
               placeholder="Username"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all placeholder-[var(--color-text-secondary)]/50 font-medium"
+              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
             />
           </div>
 
+          <AnimatePresence>
+            {!isLogin && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }} 
+                animate={{ opacity: 1, height: 'auto' }} 
+                exit={{ opacity: 0, height: 0 }}
+                className="relative group overflow-hidden"
+              >
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <span className="text-[var(--color-text-secondary)] text-xs font-bold uppercase">DOB</span>
+                </div>
+                <input
+                  type="date"
+                  required={!isLogin}
+                  value={formData.dob}
+                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-16 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium"
+                  style={{ colorScheme: 'dark' }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Lock className="text-[var(--color-text-secondary)] group-focus-within:text-[var(--color-neon-cyan)] transition-colors" size={20} />
-            </div>
             <input
               type="password"
               required
               placeholder="Password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all placeholder-[var(--color-text-secondary)]/50 font-medium"
+              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
             />
           </div>
 
-          <button 
+          <button
             type="submit"
-            disabled={isLoading}
-            className="w-full group relative flex items-center justify-center gap-2 bg-[var(--color-neon-cyan)] text-[var(--color-vault-black)] font-black uppercase tracking-widest py-4 rounded-xl hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(0,240,255,0.2)] hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] disabled:opacity-70 disabled:hover:scale-100"
+            disabled={loading}
+            className="w-full bg-[var(--color-neon-cyan)] text-black py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 mt-4"
           >
-            {isLoading ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <>
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={isLogin ? 'login' : 'signup'}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {isLogin ? 'Login' : 'Initialize'}
-                  </motion.span>
-                </AnimatePresence>
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
+            {loading ? 'Processing...' : (isLogin ? <><LogIn size={18} /> Initialize Login</> : <><UserPlus size={18} /> Register Identity</>)}
           </button>
         </form>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center border-t border-[var(--color-vault-border)] pt-6">
           <p className="text-[var(--color-text-secondary)] text-sm font-medium">
-            {isLogin ? "Don't have an access code?" : "Already have an identity?"}{' '}
-            <button 
-              onClick={toggleAuthMode}
-              type="button"
-              className="text-[var(--color-neon-cyan)] font-bold hover:underline underline-offset-4 tracking-wide"
-            >
-              {isLogin ? 'Register now.' : 'Sign in.'}
-            </button>
+            {isLogin ? "No vault access yet?" : "Already registered?"}
           </p>
+          <button 
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+              setFormData({ username: '', password: '', dob: '' });
+            }} 
+            className="text-[var(--color-neon-cyan)] font-bold uppercase tracking-widest text-xs mt-2 hover:text-white transition-colors"
+          >
+            {isLogin ? 'Create Identity' : 'Initialize Login'}
+          </button>
         </div>
       </motion.div>
     </div>

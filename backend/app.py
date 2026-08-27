@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime, date
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -27,27 +28,37 @@ def system_status():
     return jsonify({"status": "operational", "database": "connected"}), 200
 
 # ==========================================
-# AUTHENTICATION ROUTES
+# AUTHENTICATION & REGISTRATION
 # ==========================================
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    dob_str = data.get('dob') # Format: YYYY-MM-DD
 
-    if not username or not password:
-        return jsonify({"error": "Username and password are required"}), 400
+    if not username or not password or not dob_str:
+        return jsonify({"error": "Username, password, and Date of Birth are required"}), 400
 
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 409
 
+    try:
+        dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, password_hash=hashed_password)
+    new_user = User(username=username, password_hash=hashed_password, date_of_birth=dob)
     db.session.add(new_user)
     db.session.commit()
 
     access_token = create_access_token(identity=str(new_user.id))
-    return jsonify({"message": "User registered successfully", "access_token": access_token, "user": {"id": new_user.id, "username": new_user.username}}), 201
+    return jsonify({
+        "message": "Identity created", 
+        "access_token": access_token, 
+        "user": {"id": new_user.id, "username": new_user.username}
+    }), 201
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -68,6 +79,43 @@ def login():
             "profilePic": user.profile_pic
         }
     }), 200
+
+# ==========================================
+# SECURE RAWG PROXY & AGE FILTERING
+# ==========================================
+def is_minor(user_id):
+    if not user_id: return False # Guests see default feed
+    user = User.query.get(user_id)
+    if not user or not user.date_of_birth: return False
+    
+    today = date.today()
+    age = today.year - user.date_of_birth.year - ((today.month, today.day) < (user.date_of_birth.month, user.date_of_birth.day))
+    return age < 18
+
+@app.route('/api/games', methods=['GET'])
+@jwt_required(optional=True)
+def get_games():
+    rawg_key = os.getenv('RAWG_API_KEY')
+    page = request.args.get('page', 1)
+    search = request.args.get('search', '')
+    
+    url = f"https://api.rawg.io/api/games?key={rawg_key}&page_size=24&page={page}"
+    if search:
+        url += f"&search={search}"
+
+    # Enforce backend age restriction
+    if is_minor(get_jwt_identity()):
+        # RAWG ESRB IDs: 1 (E), 2 (E10+), 3 (T), 6 (RP). Excludes 4 (M) and 5 (AO)
+        url += "&esrb=1,2,3,6"
+
+    response = requests.get(url)
+    return jsonify(response.json()), 200
+
+@app.route('/api/games/<game_id>', methods=['GET'])
+def get_game_details(game_id):
+    rawg_key = os.getenv('RAWG_API_KEY')
+    response = requests.get(f"https://api.rawg.io/api/games/{game_id}?key={rawg_key}")
+    return jsonify(response.json()), 200
 
 # ==========================================
 # PROFILE & SETTINGS ROUTES
@@ -112,16 +160,13 @@ def update_profile():
     data = request.get_json()
     new_email = data.get('email')
 
-    # Basic Email Uniqueness Validation
     if new_email and new_email != user.email:
         if User.query.filter_by(email=new_email).first():
             return jsonify({"error": "Email is already registered to another identity."}), 409
 
-    # Update editable fields
     user.display_name = data.get('displayName')
     user.email = new_email
     user.profile_pic = data.get('profilePic')
-
     db.session.commit()
 
     return jsonify({
