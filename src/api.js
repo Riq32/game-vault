@@ -1,24 +1,34 @@
-const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
+import axios from 'axios';
+
+// Vite accesses environment variables using import.meta.env
+// Make sure VITE_RAWG_API_KEY is defined in your frontend .env file
+const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const BASE_URL = 'https://api.rawg.io/api';
 
-const fetcher = async (endpoint) => {
-  const url = endpoint.includes('?') 
-    ? `${BASE_URL}${endpoint}&key=${API_KEY}` 
-    : `${BASE_URL}${endpoint}?key=${API_KEY}`;
-    
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
-  return res.json();
+/**
+ * Fetches the global discovery feed of games.
+ * Used in: Discover.jsx
+ */
+export const fetchGames = async (page = 1) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/games?key=${RAWG_API_KEY}&page_size=24&page=${page}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching games from RAWG:", error);
+    throw error;
+  }
 };
 
-export const fetchGenres = () => fetcher('/genres?page_size=20');
-
-export const fetchTrendingGames = (genreId = '') => {
-  let endpoint = '/games?ordering=-rating&page_size=20';
-  if (genreId) endpoint += `&genres=${genreId}`;
-  return fetcher(endpoint);
+/**
+ * Fetches all details, platforms, and media for a single specific game.
+ * Used in: GameDetail.jsx
+ */
+export const fetchGameDetails = async (id) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/games/${id}?key=${RAWG_API_KEY}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching details for game ID ${id}:`, error);
+    throw error;
+  }
 };
-
-export const searchGames = (query) => fetcher(`/games?search=${encodeURIComponent(query)}&page_size=20`);
-export const fetchGameDetails = (id) => fetcher(`/games/${id}`);
-export const fetchGameScreenshots = (id) => fetcher(`/games/${id}/screenshots`);
