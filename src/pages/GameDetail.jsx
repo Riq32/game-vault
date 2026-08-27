@@ -38,7 +38,7 @@ export default function GameDetail() {
 
   const previewImages = game?.short_screenshots || game?.screenshots || [
     { id: 1, image: game?.background_image },
-    { id: 2, image: game?.background_image_additional || 'https://via.placeholder.com/600x400?text=Preview+Not+Found' }
+    { id: 2, image: game?.background_image_additional || 'https://placehold.co/600x400/1a1a1a/00f0ff?text=Visual+Intel+Unavailable' }
   ];
 
   if (loading) return <div className="min-h-screen pt-32"><LoadingSpinner /></div>;
