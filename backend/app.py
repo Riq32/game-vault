@@ -35,7 +35,7 @@ def register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    dob_str = data.get('dob') # Format: YYYY-MM-DD
+    dob_str = data.get('dob')
 
     if not username or not password or not dob_str:
         return jsonify({"error": "Username, password, and Date of Birth are required"}), 400
@@ -84,7 +84,7 @@ def login():
 # SECURE RAWG PROXY & AGE FILTERING
 # ==========================================
 def is_minor(user_id):
-    if not user_id: return False # Guests see default feed
+    if not user_id: return False
     user = User.query.get(user_id)
     if not user or not user.date_of_birth: return False
     
@@ -103,9 +103,7 @@ def get_games():
     if search:
         url += f"&search={search}"
 
-    # Enforce backend age restriction
     if is_minor(get_jwt_identity()):
-        # RAWG ESRB IDs: 1 (E), 2 (E10+), 3 (T), 6 (RP). Excludes 4 (M) and 5 (AO)
         url += "&esrb=1,2,3,6"
 
     response = requests.get(url)
@@ -197,7 +195,7 @@ def save_preferences():
     return jsonify({"message": "Preferences saved successfully securely in the vault."}), 200
 
 # ==========================================
-# VAULT ROUTES
+# VAULT & REVIEW ROUTES
 # ==========================================
 @app.route('/api/vault', methods=['GET', 'POST'])
 @jwt_required()
@@ -240,9 +238,6 @@ def update_vault_item(item_id):
         db.session.commit()
         return jsonify({"message": "Item removed"}), 200
 
-# ==========================================
-# REVIEW ROUTES
-# ==========================================
 @app.route('/api/reviews/<game_id>', methods=['GET'])
 def get_reviews(game_id):
     reviews = db.session.query(Review, User)\

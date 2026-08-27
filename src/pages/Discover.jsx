@@ -19,16 +19,14 @@ export default function Discover() {
   useEffect(() => {
     const getGames = async () => {
       try {
-        // 1. Fetch generic discovery feed
         const data = await fetchGames(); 
-        setGames(data.results);
+        setGames(data.results || []); 
         
-        // 2. If user is logged in, fetch tailored algorithmic recommendations
         if (token) {
           const recResponse = await axios.get('http://localhost:5000/api/recommendations', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setRecommendedGames(recResponse.data);
+          setRecommendedGames(recResponse.data || []);
         }
       } catch (err) {
         setError("Failed to load transmission data.");
@@ -69,10 +67,7 @@ export default function Discover() {
     <div className="min-h-screen bg-[var(--color-vault-black)] pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         
-        {/* ========================================== */}
-        {/* PERSONALIZED RECOMMENDATION SECTION        */}
-        {/* ========================================== */}
-        {token && recommendedGames.length > 0 && (
+        {token && recommendedGames?.length > 0 && (
           <div className="mb-16">
             <h2 className="text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3">
               <Crosshair className="text-[var(--color-neon-cyan)]" size={28} />
@@ -80,7 +75,7 @@ export default function Discover() {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {recommendedGames.map((game, idx) => (
+              {recommendedGames?.map((game, idx) => (
                 <Link key={`rec-${game.id}`} to={`/game/${game.id}`}>
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -105,15 +100,12 @@ export default function Discover() {
           </div>
         )}
 
-        {/* ========================================== */}
-        {/* GLOBAL DISCOVERY FEED                      */}
-        {/* ========================================== */}
         <h1 className="text-4xl font-black uppercase tracking-tighter mb-10 border-b border-[var(--color-vault-border)] pb-4 inline-block">
           Global <span className="text-[var(--color-neon-cyan)]">Transmissions</span>
         </h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {games.map((game, idx) => (
+          {games?.map((game, idx) => (
             <Link key={game.id} to={`/game/${game.id}`}>
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}

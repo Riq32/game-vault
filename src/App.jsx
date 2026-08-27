@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext'; // NEW: Import the Provider
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext'; 
 
 // Component Imports
 import Navbar from './components/Navbar';
@@ -16,6 +16,14 @@ import Auth from './pages/Auth';
 import Onboarding from './pages/Onboarding';
 import Profile from './pages/Profile';
 import About from './pages/About';
+import Preferences from './pages/Preferences'; // NEW: Added Preferences
+
+// NEW: Security wrapper to prevent unauthorized access to private pages
+const ProtectedRoute = ({ children }) => {
+  const { token } = useAuth();
+  if (!token) return <Navigate to="/auth" replace />;
+  return children;
+};
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -34,22 +42,42 @@ export default function App() {
           {/* Page Content */}
           <main className="flex-grow pt-20"> 
             <Routes>
-              {/* Core Browsing */}
+              {/* Core Browsing (Public) */}
               <Route path="/" element={<Landing />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/search" element={<Search />} />
               <Route path="/game/:id" element={<GameDetail />} />
+              <Route path="/about" element={<About />} />
               
-              {/* User Access & Setup */}
+              {/* User Access & Setup (Public) */}
               <Route path="/auth" element={<Auth />} />
               <Route path="/onboarding" element={<Onboarding />} />
               
-              {/* Personalized Vault Space */}
-              <Route path="/backlog" element={<Backlog />} />
-              <Route path="/profile" element={<Profile />} />
-              
-              {/* Meta */}
-              <Route path="/about" element={<About />} />
+              {/* Personalized Vault Space (Protected) */}
+              <Route 
+                path="/preferences" 
+                element={
+                  <ProtectedRoute>
+                    <Preferences />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/backlog" 
+                element={
+                  <ProtectedRoute>
+                    <Backlog />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </main>
         </div>

@@ -8,9 +8,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth(); // Access the globally synced user data
+  const { user } = useAuth();
 
-  // Handle transparent to solid background on scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -19,7 +18,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location]);
@@ -30,32 +28,25 @@ export default function Navbar() {
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
         
-        {/* Logo */}
         <Link to="/" className="text-2xl font-black tracking-tighter uppercase flex items-center gap-2 z-50">
           <span className="text-[var(--color-neon-cyan)]">Game</span>Vault
         </Link>
 
-        {/* Desktop Navigation Links */}
         <div className="hidden md:flex items-center gap-8">
           <Link to="/discover" className="text-sm font-bold uppercase tracking-widest text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] transition-colors">Discover</Link>
           <Link to="/about" className="text-sm font-bold uppercase tracking-widest text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] transition-colors">About</Link>
-          
-          {/* Conditionally Rendered Protected Links */}
           {user && (
             <Link to="/backlog" className="text-sm font-bold uppercase tracking-widest text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] transition-colors">My Vault</Link>
           )}
         </div>
 
-        {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-6">
           <Link to="/search" className="text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] transition-colors">
             <Search size={20} />
           </Link>
           
-          {/* Dynamic Profile / Login Button */}
           {user ? (
             <Link to="/profile" className="flex items-center gap-3 bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] hover:border-[var(--color-neon-cyan)] hover:text-[var(--color-neon-cyan)] pl-2 pr-4 py-1.5 rounded-full font-bold uppercase tracking-widest text-xs transition-all">
-              {/* Show Avatar if it exists, otherwise show the User Icon */}
               {user.profilePic ? (
                 <img src={user.profilePic} alt="Avatar" className="w-6 h-6 rounded-full object-cover border border-[var(--color-vault-border)]" />
               ) : (
@@ -63,7 +54,6 @@ export default function Navbar() {
                   <User size={12} />
                 </div>
               )}
-              {/* Show Display Name if it exists, fallback to username */}
               {user.displayName || user.username}
             </Link>
           ) : (
@@ -73,14 +63,12 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Toggle */}
         <button className="md:hidden text-[var(--color-text-secondary)] hover:text-white z-50" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
       </div>
 
-      {/* Mobile Navigation Dropdown */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
