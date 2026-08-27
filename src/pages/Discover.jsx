@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { fetchGames } from '../api'; 
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
-import { Plus, Check, Star, Crosshair } from 'lucide-react';
+import { Plus, Check, Star, Crosshair, Loader2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
 export default function Discover() {
@@ -23,13 +21,14 @@ export default function Discover() {
         setGames(data.results || []); 
         
         if (token) {
+          // Explicitly calling /api/recommendations
           const recResponse = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/recommendations', {
             headers: { Authorization: `Bearer ${token}` }
           });
           setRecommendedGames(recResponse.data || []);
         }
       } catch (err) {
-        setError("Failed to load transmission data.");
+        setError("Failed to load transmission data. Server might be spinning up.");
       } finally {
         setLoading(false);
       }
@@ -45,6 +44,7 @@ export default function Discover() {
     }
 
     try {
+      // Explicitly calling /api/vault
       await axios.post(
         'https://game-vault-backend-n7ul.onrender.com/api/vault',
         { game_id: game.id, game_name: game.name },
@@ -60,8 +60,21 @@ export default function Discover() {
     }
   };
 
-  if (loading) return <div className="min-h-screen pt-32"><LoadingSpinner /></div>;
-  if (error) return <div className="min-h-screen pt-32"><ErrorMessage message={error} /></div>;
+  if (loading) return (
+    <div className="min-h-screen pt-32 flex flex-col items-center justify-center bg-[var(--color-vault-black)]">
+      <Loader2 className="animate-spin text-[var(--color-neon-cyan)] mb-4" size={48} />
+      <p className="text-[var(--color-text-secondary)] font-bold tracking-widest uppercase text-sm">Transmitting Data...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen pt-32 flex flex-col items-center justify-center bg-[var(--color-vault-black)] px-6">
+      <div className="bg-red-500/10 border border-red-500/50 p-6 rounded-2xl text-center max-w-md">
+        <AlertCircle className="text-red-500 mx-auto mb-4" size={48} />
+        <p className="text-red-500 font-bold">{error}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[var(--color-vault-black)] pt-32 pb-20 px-6">
