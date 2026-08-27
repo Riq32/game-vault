@@ -84,7 +84,7 @@ export default function Discover() {
                     className="bg-[var(--color-vault-surface)] border border-[var(--color-neon-cyan)]/50 rounded-2xl overflow-hidden hover:border-[var(--color-neon-cyan)] transition-all group relative h-full flex flex-col shadow-[0_0_15px_rgba(0,240,255,0.1)] hover:shadow-[0_0_25px_rgba(0,240,255,0.2)]"
                   >
                     <div className="relative h-40 overflow-hidden">
-                      <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100" />
+                      <img src={game.background_image || 'https://placehold.co/600x400/1a1a1a/00f0ff?text=No+Visual+Data'} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100" />
                       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-[var(--color-vault-surface)] opacity-90"></div>
                       <div className="absolute bottom-3 left-3 right-3">
                         <h3 className="font-bold text-lg leading-tight truncate text-white">{game.name}</h3>
@@ -114,7 +114,7 @@ export default function Discover() {
                 className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] rounded-2xl overflow-hidden hover:border-[var(--color-text-secondary)] transition-all group relative h-full flex flex-col"
               >
                 <div className="relative h-48 overflow-hidden">
-                  <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100" />
+                  <img src={game.background_image || 'https://placehold.co/600x400/1a1a1a/00f0ff?text=No+Visual+Data'} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100" />
                   <div className="absolute top-3 right-3 bg-[var(--color-vault-black)]/90 backdrop-blur-md border border-[var(--color-vault-border)] px-2 py-1 rounded text-xs font-bold text-[var(--color-neon-cyan)] flex items-center gap-1">
                     <Star size={12} className="fill-[var(--color-neon-cyan)]" /> {game.rating}
                   </div>

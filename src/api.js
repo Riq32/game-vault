@@ -2,16 +2,10 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:5000/api';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
+// Fetches the global discovery feed
 export const fetchGames = async (page = 1) => {
   try {
-    const response = await axios.get(`${BASE_URL}/games?page=${page}`, { 
-      headers: getAuthHeader() 
-    });
+    const response = await axios.get(`${BASE_URL}/games?page=${page}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching games:", error);
@@ -19,6 +13,7 @@ export const fetchGames = async (page = 1) => {
   }
 };
 
+// Fetches specific game details
 export const fetchGameDetails = async (id) => {
   try {
     const response = await axios.get(`${BASE_URL}/games/${id}`);
@@ -29,11 +24,10 @@ export const fetchGameDetails = async (id) => {
   }
 };
 
+// Searches for games based on user query
 export const searchGames = async (query, page = 1) => {
   try {
-    const response = await axios.get(`${BASE_URL}/games?search=${query}&page=${page}`, { 
-      headers: getAuthHeader() 
-    });
+    const response = await axios.get(`${BASE_URL}/games?search=${query}&page=${page}`);
     return response.data;
   } catch (error) {
     console.error(`Error searching games with query "${query}":`, error);

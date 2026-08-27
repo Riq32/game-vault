@@ -1,6 +1,6 @@
 import os
 import requests
-from datetime import datetime, date
+from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -37,6 +37,7 @@ def register():
     password = data.get('password')
     dob_str = data.get('dob')
 
+    # DOB is collected as a formality, but won't be used to censor games
     if not username or not password or not dob_str:
         return jsonify({"error": "Username, password, and Date of Birth are required"}), 400
 
@@ -81,39 +82,33 @@ def login():
     }), 200
 
 # ==========================================
-# SECURE RAWG PROXY & AGE FILTERING
+# UNRESTRICTED RAWG PROXY 
 # ==========================================
-def is_minor(user_id):
-    if not user_id: return False
-    user = User.query.get(user_id)
-    if not user or not user.date_of_birth: return False
-    
-    today = date.today()
-    age = today.year - user.date_of_birth.year - ((today.month, today.day) < (user.date_of_birth.month, user.date_of_birth.day))
-    return age < 18
-
 @app.route('/api/games', methods=['GET'])
-@jwt_required(optional=True)
 def get_games():
     rawg_key = os.getenv('RAWG_API_KEY')
     page = request.args.get('page', 1)
     search = request.args.get('search', '')
     
+    # Direct, unfiltered request to RAWG
     url = f"https://api.rawg.io/api/games?key={rawg_key}&page_size=24&page={page}"
     if search:
         url += f"&search={search}"
 
-    if is_minor(get_jwt_identity()):
-        url += "&esrb=1,2,3,6"
-
-    response = requests.get(url)
-    return jsonify(response.json()), 200
+    try:
+        response = requests.get(url)
+        return jsonify(response.json()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/games/<game_id>', methods=['GET'])
 def get_game_details(game_id):
     rawg_key = os.getenv('RAWG_API_KEY')
-    response = requests.get(f"https://api.rawg.io/api/games/{game_id}?key={rawg_key}")
-    return jsonify(response.json()), 200
+    try:
+        response = requests.get(f"https://api.rawg.io/api/games/{game_id}?key={rawg_key}")
+        return jsonify(response.json()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ==========================================
 # PROFILE & SETTINGS ROUTES

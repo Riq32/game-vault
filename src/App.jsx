@@ -16,9 +16,8 @@ import Auth from './pages/Auth';
 import Onboarding from './pages/Onboarding';
 import Profile from './pages/Profile';
 import About from './pages/About';
-import Preferences from './pages/Preferences'; // NEW: Added Preferences
 
-// NEW: Security wrapper to prevent unauthorized access to private pages
+// Security wrapper to prevent unauthorized access to private pages
 const ProtectedRoute = ({ children }) => {
   const { token } = useAuth();
   if (!token) return <Navigate to="/auth" replace />;
@@ -51,14 +50,13 @@ export default function App() {
               
               {/* User Access & Setup (Public) */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/onboarding" element={<Onboarding />} />
               
-              {/* Personalized Vault Space (Protected) */}
+              {/* Personalized Vault Space & Setup (Protected) */}
               <Route 
-                path="/preferences" 
+                path="/onboarding" 
                 element={
                   <ProtectedRoute>
-                    <Preferences />
+                    <Onboarding />
                   </ProtectedRoute>
                 } 
               />

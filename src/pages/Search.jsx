@@ -1,93 +1,109 @@
-
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { searchGames } from '../api';
-import { useFetch } from '../hooks/useFetch';
-import GameCard from '../components/GameCard';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { searchGames } from '../api'; 
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
-import { Search as SearchIcon } from 'lucide-react';
+import { Search as SearchIcon, Star, Gamepad2 } from 'lucide-react';
 
 export default function Search() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const query = searchParams.get('q') || '';
-  
-  // Local state for the input field
-  const [inputValue, setInputValue] = useState(query);
-  
-  // Fetch data based on the URL query parameter, not every keystroke
-  const { data, loading, error } = useFetch(
-    () => (query ? searchGames(query) : Promise.resolve({ results: [] })), 
-    query
-  );
+  const [query, setQuery] = useState('');
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
-  // Keep the input field in sync if the URL changes externally
-  useEffect(() => {
-    setInputValue(query);
-  }, [query]);
-
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (inputValue.trim()) {
-      setSearchParams({ q: inputValue });
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setError('');
+    setHasSearched(true);
+
+    try {
+      const data = await searchGames(query);
+      setGames(data.results || []);
+    } catch (err) {
+      setError("Failed to execute search query.");
+      setGames([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <main className="max-w-7xl mx-auto p-6 animate-fade-in">
-      
-      {/* Premium Search Header & Input */}
-      <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-black mb-8 tracking-tighter text-center text-[var(--color-text-primary)] uppercase drop-shadow-sm animate-slide-up">
-          Search THE <span className="text-[var(--color-neon-cyan)]">DATABASE</span>
-        </h1>
+    <div className="min-h-screen bg-[var(--color-vault-black)] pt-32 pb-20 px-6">
+      <div className="max-w-7xl mx-auto">
         
-        <form onSubmit={handleSearch} className="max-w-3xl mx-auto relative group animate-slide-up" style={{ animationDelay: '100ms' }}>
-          <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-            <SearchIcon className="text-[var(--color-text-secondary)] group-focus-within:text-[var(--color-neon-cyan)] transition-colors" size={24} />
-          </div>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Search for titles, publishers, or keywords..."
-            className="w-full bg-[var(--color-vault-surface)] border-2 border-[var(--color-vault-border)] text-[var(--color-text-primary)] text-lg placeholder-[var(--color-text-secondary)] rounded-full py-5 pl-16 pr-8 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-4 focus:ring-[var(--color-neon-cyan)]/10 transition-all shadow-lg"
-          />
-          <button 
-            type="submit"
-            className="absolute inset-y-2 right-2 bg-[var(--color-neon-cyan)] text-[var(--color-vault-black)] font-black uppercase tracking-wider px-6 rounded-full hover:scale-105 transition-transform"
-          >
-            Find
-          </button>
-        </form>
-      </div>
-      
-      {/* Search Results */}
-      {query && (
-        <div className="mt-8 border-t border-[var(--color-vault-border)] pt-8">
-          <h2 className="text-xl font-bold mb-6 text-[var(--color-text-secondary)] uppercase tracking-widest">
-            Results for: <span className="text-[var(--color-text-primary)]">"{query}"</span>
-          </h2>
+        <div className="max-w-2xl mx-auto mb-12">
+          <h1 className="text-4xl font-black uppercase tracking-tighter mb-6 text-center">
+            Database <span className="text-[var(--color-neon-cyan)]">Query</span>
+          </h1>
           
-          {loading ? (
-            <LoadingSpinner />
-          ) : error ? (
-            <ErrorMessage message={error} />
-          ) : data?.results?.length === 0 ? (
-            <div className="text-center py-24 text-[var(--color-text-secondary)] text-xl font-bold tracking-wider bg-[var(--color-vault-surface)] rounded-2xl border border-[var(--color-vault-border)]">
-              No games found. Try a different search term.
+          <form onSubmit={handleSearch} className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <SearchIcon className="text-[var(--color-text-secondary)] group-focus-within:text-[var(--color-neon-cyan)] transition-colors" size={24} />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {data?.results.map((game, index) => (
-                <div key={game.id} style={{ animationDelay: `${index * 50}ms` }}>
-                  <GameCard game={game} />
-                </div>
-              ))}
-            </div>
-          )}
+            <input 
+              type="text" 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search the global game registry..." 
+              className="w-full bg-[var(--color-vault-surface)] border-2 border-[var(--color-vault-border)] text-white rounded-2xl py-4 pl-14 pr-32 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:shadow-[0_0_20px_rgba(0,240,255,0.2)] transition-all text-lg font-medium"
+            />
+            <button 
+              type="submit"
+              disabled={loading || !query.trim()}
+              className="absolute inset-y-2 right-2 bg-[var(--color-neon-cyan)] text-black px-6 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50"
+            >
+              Search
+            </button>
+          </form>
         </div>
-      )}
-    </main>
+
+        {loading && <div className="mt-20"><LoadingSpinner /></div>}
+        {error && <div className="mt-20"><ErrorMessage message={error} /></div>}
+
+        {!loading && !error && hasSearched && games.length === 0 && (
+          <div className="mt-20 text-center flex flex-col items-center">
+            <Gamepad2 size={64} className="text-[var(--color-vault-border)] mb-6" />
+            <h2 className="text-2xl font-black uppercase tracking-widest text-[var(--color-text-secondary)]">No Transmissions Found</h2>
+            <p className="text-zinc-500 mt-2 font-medium">Try adjusting your search parameters.</p>
+          </div>
+        )}
+
+        {!loading && !error && games.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-12">
+            {games?.map((game, idx) => (
+              <Link key={game.id} to={`/game/${game.id}`}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] rounded-2xl overflow-hidden hover:border-[var(--color-neon-cyan)] transition-all group relative h-full flex flex-col"
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    <img src={game.background_image || 'https://placehold.co/600x400/1a1a1a/00f0ff?text=No+Visual+Data'} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100" />
+                    <div className="absolute top-3 right-3 bg-[var(--color-vault-black)]/90 backdrop-blur-md border border-[var(--color-vault-border)] px-2 py-1 rounded text-xs font-bold text-[var(--color-neon-cyan)] flex items-center gap-1">
+                      <Star size={12} className="fill-[var(--color-neon-cyan)]" /> {game.rating || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div className="p-5 flex flex-col flex-grow justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg mb-1 leading-tight group-hover:text-[var(--color-neon-cyan)] transition-colors line-clamp-2">{game.name}</h3>
+                      <p className="text-[var(--color-text-secondary)] text-xs font-medium mb-4">
+                        {game.released ? new Date(game.released).getFullYear() : 'TBA'}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

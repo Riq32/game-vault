@@ -21,11 +21,14 @@ export default function Auth() {
     const url = isLogin ? 'http://localhost:5000/api/login' : 'http://localhost:5000/api/register';
 
     try {
+      // Send dob only during registration
       const payload = isLogin ? { username: formData.username, password: formData.password } : formData;
       const response = await axios.post(url, payload);
       
       login(response.data.access_token, response.data.user);
-      navigate(isLogin ? '/discover' : '/preferences');
+      
+      // Route new users to onboarding, and returning users to the discover feed
+      navigate(isLogin ? '/discover' : '/onboarding');
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed. Server unreachable.');
     } finally {
@@ -35,6 +38,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-[var(--color-vault-black)]">
+      {/* Background Decor */}
       <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-[var(--color-neon-cyan)]/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-[var(--color-neon-magenta)]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -119,7 +123,7 @@ export default function Auth() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[var(--color-neon-cyan)] text-black py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-white transition-all disabled:opacity-50 flex justify-center items-center gap-2 mt-4"
+            className="w-full bg-[var(--color-neon-cyan)] text-black py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 mt-4"
           >
             {loading ? 'Processing...' : (isLogin ? <><LogIn size={18} /> Initialize Login</> : <><UserPlus size={18} /> Register Identity</>)}
           </button>
