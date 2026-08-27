@@ -32,3 +32,18 @@ export const fetchGameDetails = async (id) => {
     throw error;
   }
 };
+
+/**
+ * Searches for games based on a user's text query.
+ * Used in: Search.jsx
+ */
+export const searchGames = async (query, page = 1) => {
+  try {
+    // RAWG uses the &search= parameter to find specific titles
+    const response = await axios.get(`${BASE_URL}/games?key=${RAWG_API_KEY}&search=${query}&page_size=24&page=${page}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error searching games with query "${query}":`, error);
+    throw error;
+  }
+};

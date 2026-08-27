@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Menu, X, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext'; // NEW: Import the auth hook
+import { useAuth } from '../context/AuthContext'; 
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth(); // NEW: Get current user state
+  const { user } = useAuth(); // Access the globally synced user data
 
   // Handle transparent to solid background on scroll
   useEffect(() => {
@@ -52,10 +52,19 @@ export default function Navbar() {
             <Search size={20} />
           </Link>
           
-          {/* Conditional Profile / Login Button */}
+          {/* Dynamic Profile / Login Button */}
           {user ? (
-            <Link to="/profile" className="flex items-center gap-2 bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] hover:border-[var(--color-neon-cyan)] hover:text-[var(--color-neon-cyan)] px-4 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-all">
-              <User size={16} /> {user.username}
+            <Link to="/profile" className="flex items-center gap-3 bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] hover:border-[var(--color-neon-cyan)] hover:text-[var(--color-neon-cyan)] pl-2 pr-4 py-1.5 rounded-full font-bold uppercase tracking-widest text-xs transition-all">
+              {/* Show Avatar if it exists, otherwise show the User Icon */}
+              {user.profilePic ? (
+                <img src={user.profilePic} alt="Avatar" className="w-6 h-6 rounded-full object-cover border border-[var(--color-vault-border)]" />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] flex items-center justify-center">
+                  <User size={12} />
+                </div>
+              )}
+              {/* Show Display Name if it exists, fallback to username */}
+              {user.displayName || user.username}
             </Link>
           ) : (
             <Link to="/auth" className="bg-transparent border border-[var(--color-neon-cyan)] text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)] hover:text-black px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,240,255,0.1)] hover:shadow-[0_0_20px_rgba(0,240,255,0.4)]">
@@ -91,8 +100,13 @@ export default function Navbar() {
             {user ? (
               <>
                 <Link to="/backlog" className="text-lg font-bold uppercase tracking-widest text-[var(--color-text-primary)] hover:text-[var(--color-neon-cyan)]">My Vault</Link>
-                <Link to="/profile" className="text-lg font-bold uppercase tracking-widest text-[var(--color-text-primary)] hover:text-[var(--color-neon-cyan)] flex items-center gap-2">
-                  <User size={18} /> Profile ({user.username})
+                <Link to="/profile" className="text-lg font-bold uppercase tracking-widest text-[var(--color-text-primary)] hover:text-[var(--color-neon-cyan)] flex items-center gap-3">
+                  {user.profilePic ? (
+                    <img src={user.profilePic} alt="Avatar" className="w-6 h-6 rounded-full object-cover border border-[var(--color-vault-border)]" />
+                  ) : (
+                    <User size={18} /> 
+                  )}
+                  Profile ({user.displayName || user.username})
                 </Link>
               </>
             ) : (
