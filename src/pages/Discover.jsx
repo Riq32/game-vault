@@ -23,7 +23,7 @@ export default function Discover() {
         setGames(data.results || []); 
         
         if (token) {
-          const recResponse = await axios.get('http://localhost:5000/api/recommendations', {
+          const recResponse = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/recommendations', {
             headers: { Authorization: `Bearer ${token}` }
           });
           setRecommendedGames(recResponse.data || []);
@@ -46,7 +46,7 @@ export default function Discover() {
 
     try {
       await axios.post(
-        'http://localhost:5000/api/vault',
+        'https://game-vault-backend-n7ul.onrender.com/api/vault',
         { game_id: game.id, game_name: game.name },
         { headers: { Authorization: `Bearer ${token}` } }
       );

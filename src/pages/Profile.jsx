@@ -25,7 +25,7 @@ export default function Profile() {
         return;
       }
       try {
-        const response = await axios.get('http://localhost:5000/api/profile', {
+        const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setProfileData(response.data);
@@ -61,7 +61,7 @@ export default function Profile() {
     }
 
     try {
-      const response = await axios.put('http://localhost:5000/api/profile', formData, {
+      const response = await axios.put('https://game-vault-backend-n7ul.onrender.com/api/profile', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfileData({ ...profileData, ...formData });

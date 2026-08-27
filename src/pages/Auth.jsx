@@ -18,16 +18,15 @@ export default function Auth() {
     setError('');
     setLoading(true);
 
-    const url = isLogin ? 'http://localhost:5000/api/login' : 'http://localhost:5000/api/register';
+    const url = isLogin 
+      ? 'https://game-vault-backend-n7ul.onrender.com/api/login' 
+      : 'https://game-vault-backend-n7ul.onrender.com/api/register';
 
     try {
-      // Send dob only during registration
       const payload = isLogin ? { username: formData.username, password: formData.password } : formData;
       const response = await axios.post(url, payload);
       
       login(response.data.access_token, response.data.user);
-      
-      // Route new users to onboarding, and returning users to the discover feed
       navigate(isLogin ? '/discover' : '/onboarding');
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed. Server unreachable.');
@@ -38,7 +37,6 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-[var(--color-vault-black)]">
-      {/* Background Decor */}
       <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-[var(--color-neon-cyan)]/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-[var(--color-neon-magenta)]/10 rounded-full blur-[120px] pointer-events-none"></div>
 

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://game-vault-backend-n7ul.onrender.com';
 
 // Fetches the global discovery feed
 export const fetchGames = async (page = 1) => {
