@@ -37,7 +37,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed on your machine. You
 
 ## 🌐 Phase 2: Full-Stack Production Architecture
 
-The application has evolved into a comprehensive full-stack architecture, engineered as a computer science project at the University of Nairobi (Registration: SCS3/1882/2023) under the supervision of Mr. Timothy Waema Mwololo. This phase transitions the application from a local client-side tool into a robust, cloud-deployed production environment.
+The application has evolved into a comprehensive full-stack architecture, engineered as a Moringa Phase 2 project. This phase transitions the application from a local client-side tool into a robust, cloud-deployed production environment.
 
 ### 🛠️ Phase 2 Tech Stack
 
