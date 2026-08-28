@@ -27,7 +27,7 @@ export default function GameDetail() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/reviews/${id}`);
+        const response = await axios.get(`https://game-vault-backend-n7ul.onrender.com/api/reviews/${id}`);
         setReviews(response.data);
       } catch (err) {
         console.error("Failed to load reviews:", err);
@@ -52,7 +52,7 @@ export default function GameDetail() {
       } else {
         setIsTranslating(true);
         try {
-          const response = await axios.post('http://localhost:5000/api/translate', {
+          const response = await axios.post('https://game-vault-backend-n7ul.onrender.com/api/translate', {
             text: game.description
           });
           setTranslatedText(response.data.translated_text);
@@ -82,7 +82,7 @@ export default function GameDetail() {
     setIsSubmittingReview(true);
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/reviews',
+        'https://game-vault-backend-n7ul.onrender.com/api/reviews',
         { game_id: id, rating: rating, text: reviewText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -22,7 +22,7 @@ export default function Backlog() {
     }
 
     try {
-      const response = await axios.get('http://localhost:5000/api/vault', {
+      const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/vault', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setVaultItems(response.data);
@@ -37,7 +37,7 @@ export default function Backlog() {
     const token = localStorage.getItem('token');
     try {
       await axios.put(
-        `http://localhost:5000/api/vault/${itemId}`,
+        `https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -51,7 +51,7 @@ export default function Backlog() {
   const removeGame = async (itemId) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:5000/api/vault/${itemId}`, {
+      await axios.delete(`https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setVaultItems(vaultItems.filter(item => item.id !== itemId));
