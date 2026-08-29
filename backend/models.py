@@ -18,6 +18,7 @@ class User(db.Model):
     current_streak = db.Column(db.Integer, default=0, nullable=False)
     highest_streak = db.Column(db.Integer, default=0, nullable=False)
     last_login_date = db.Column(db.Date, nullable=True)
+    last_rank = db.Column(db.Integer, default=0, nullable=False) # Tracks leaderboard movement
     
     vault_items = db.relationship('VaultItem', backref='user', lazy=True, cascade='all, delete-orphan')
     reviews = db.relationship('Review', backref='author', lazy=True, cascade='all, delete-orphan')
@@ -31,7 +32,7 @@ class Notification(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     message = db.Column(db.String(500), nullable=False)
-    type = db.Column(db.String(50), default='system') # reminder, recommendation, activity
+    type = db.Column(db.String(50), default='system') # vault, activity, achievement, leaderboard, recommendation, reminder
     is_read = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

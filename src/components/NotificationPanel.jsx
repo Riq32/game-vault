@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Check, Clock, Star, Zap, X } from 'lucide-react';
+import { Bell, Check, Clock, Star, Zap, X, Trophy, PlusCircle, TrendingUp, Gamepad2 } from 'lucide-react';
 import axios from 'axios';
 
 export default function NotificationPanel({ isOpen, onClose }) {
@@ -51,9 +51,12 @@ export default function NotificationPanel({ isOpen, onClose }) {
 
   const getIcon = (type) => {
     switch(type) {
-      case 'reminder': return <Clock size={16} className="text-yellow-400" />;
+      case 'vault': return <PlusCircle size={16} className="text-blue-400" />;
+      case 'activity': return <Gamepad2 size={16} className="text-[var(--color-neon-cyan)]" />;
+      case 'achievement': return <Trophy size={16} className="text-yellow-400" />;
+      case 'leaderboard': return <TrendingUp size={16} className="text-green-400" />;
       case 'recommendation': return <Star size={16} className="text-purple-400" />;
-      case 'activity': return <Zap size={16} className="text-[var(--color-neon-cyan)]" />;
+      case 'reminder': return <Clock size={16} className="text-orange-400" />;
       default: return <Bell size={16} className="text-[var(--color-text-secondary)]" />;
     }
   };
@@ -108,8 +111,8 @@ export default function NotificationPanel({ isOpen, onClose }) {
                       </div>
                       <div className="flex-grow">
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className={`text-sm font-bold ${!notif.is_read ? 'text-white' : 'text-[var(--color-text-secondary)]'}`}>{notif.title}</h4>
-                          {!notif.is_read && <span className="w-2 h-2 rounded-full bg-[var(--color-neon-cyan)] flex-shrink-0 mt-1"></span>}
+                          <h4 className={`text-sm font-bold tracking-wide ${!notif.is_read ? 'text-white' : 'text-[var(--color-text-secondary)]'}`}>{notif.title}</h4>
+                          {!notif.is_read && <span className="w-2 h-2 rounded-full bg-[var(--color-neon-cyan)] flex-shrink-0 mt-1 shadow-[0_0_8px_var(--color-neon-cyan)]"></span>}
                         </div>
                         <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{notif.message}</p>
                         <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]/50 mt-2 block">{notif.date}</span>
