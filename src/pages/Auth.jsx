@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogIn, UserPlus, AlertCircle, Terminal, Mail, Lock, User, BadgeCheck } from 'lucide-react';
 import axios from 'axios';
@@ -12,6 +12,15 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // THE FIX: Self-Cleaning Mechanism
+  // This automatically purges any corrupted "ghost" tokens from previous tests
+  // the moment the login page mounts, ensuring a completely clean slate.
+  useEffect(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+  }, []);
 
   const validateForm = () => {
     if (!isLogin && !formData.fullName.trim()) return "Full name is required.";
@@ -44,10 +53,17 @@ export default function Auth() {
         
       const response = await axios.post(url, payload);
       
-      login(response.data.token, {
-        username: response.data.username,
-        full_name: response.data.full_name
+      const { token, username, full_name } = response.data;
+
+      // Globally attach the new valid token to Axios for all subsequent requests
+      // This guarantees the 422 error cannot happen on the next page
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      login(token, {
+        username: username,
+        full_name: full_name
       });
+      
       navigate(isLogin ? '/discover' : '/onboarding');
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed. Server unreachable.');
