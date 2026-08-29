@@ -45,6 +45,11 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
 with app.app_context():
+    # ⚠️ TEMPORARY DATABASE WIPE TO FIX SCHEMA ⚠️
+    # Remove db.drop_all() after your first successful deployment!
+    db.drop_all()
+    
+    # Rebuilds the database fresh with all new columns
     db.create_all()
 
 # ==========================================
@@ -102,6 +107,8 @@ def health_check():
 
 @app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     data = request.get_json()
     if not all(k in data for k in ("full_name", "username", "email", "password")):
         return jsonify({"error": "All fields are required"}), 400
@@ -125,6 +132,8 @@ def register():
 
 @app.route('/api/login', methods=['POST', 'OPTIONS'])
 def login():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     data = request.get_json()
     user = User.query.filter_by(email=data.get('email')).first()
     if user and bcrypt.check_password_hash(user.password_hash, data.get('password')):
@@ -134,6 +143,8 @@ def login():
 @app.route('/api/profile', methods=['GET', 'PATCH', 'OPTIONS'])
 @jwt_required(optional=True)
 def profile():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     current_user_id = get_jwt_identity()
     if not current_user_id:
         return jsonify({"error": "Unauthorized"}), 401
@@ -204,6 +215,8 @@ def profile():
 @app.route('/api/notifications', methods=['GET', 'OPTIONS'])
 @jwt_required(optional=True)
 def get_notifications():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     current_user_id = get_jwt_identity()
     if not current_user_id: return jsonify([]), 200
 
@@ -213,6 +226,8 @@ def get_notifications():
 @app.route('/api/notifications/<int:notif_id>/read', methods=['PATCH', 'OPTIONS'])
 @jwt_required(optional=True)
 def read_notification(notif_id):
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     current_user_id = get_jwt_identity()
     if not current_user_id: return jsonify({"error": "Unauthorized"}), 401
 
@@ -225,6 +240,8 @@ def read_notification(notif_id):
 @app.route('/api/notifications/read-all', methods=['PATCH', 'OPTIONS'])
 @jwt_required(optional=True)
 def read_all_notifications():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     current_user_id = get_jwt_identity()
     if not current_user_id: return jsonify({"error": "Unauthorized"}), 401
 
@@ -235,6 +252,8 @@ def read_all_notifications():
 @app.route('/api/leaderboard', methods=['GET', 'OPTIONS'])
 @jwt_required(optional=True)
 def get_leaderboard():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     current_user_id = get_jwt_identity()
     users = User.query.order_by(User.xp.desc(), User.current_streak.desc()).limit(100).all()
     return jsonify([{
@@ -248,6 +267,8 @@ def get_leaderboard():
 @app.route('/api/vault', methods=['GET', 'POST', 'OPTIONS'])
 @jwt_required(optional=True)
 def handle_vault():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     user_id = get_jwt_identity()
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
 
@@ -267,6 +288,8 @@ def handle_vault():
 @app.route('/api/vault/<int:item_id>', methods=['PATCH', 'DELETE', 'OPTIONS'])
 @jwt_required(optional=True)
 def modify_vault_item(item_id):
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     user_id = get_jwt_identity()
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
 
@@ -313,6 +336,8 @@ def modify_vault_item(item_id):
 @app.route('/api/preferences', methods=['POST', 'OPTIONS'])
 @jwt_required(optional=True)
 def save_preferences():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     user_id = get_jwt_identity()
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
 
@@ -328,6 +353,8 @@ def save_preferences():
 # ==========================================
 @app.route('/api/games', methods=['GET', 'OPTIONS'])
 def get_games():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     page = request.args.get('page', 1)
     search = request.args.get('search', '')
     url = f"https://api.rawg.io/api/games?key={RAWG_API_KEY}&page={page}&page_size=20"
@@ -348,6 +375,8 @@ def get_games():
 
 @app.route('/api/games/<int:game_id>', methods=['GET', 'OPTIONS'])
 def get_game_details(game_id):
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     try:
         response = requests.get(f"https://api.rawg.io/api/games/{game_id}?key={RAWG_API_KEY}", timeout=10)
         response.raise_for_status()
@@ -358,6 +387,8 @@ def get_game_details(game_id):
 @app.route('/api/recommendations', methods=['GET', 'OPTIONS'])
 @jwt_required(optional=True)
 def get_recommendations():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     user_id = get_jwt_identity()
     pref = Preference.query.filter_by(user_id=user_id).first() if user_id else None
     
@@ -375,6 +406,8 @@ def get_recommendations():
 @app.route('/api/reviews', methods=['POST', 'OPTIONS'])
 @jwt_required(optional=True)
 def post_review():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     user_id = get_jwt_identity()
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
 
@@ -402,6 +435,8 @@ def post_review():
 
 @app.route('/api/reviews/<int:game_id>', methods=['GET', 'OPTIONS'])
 def get_reviews(game_id):
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     reviews = Review.query.filter_by(game_id=game_id).order_by(Review.created_at.desc()).all()
     return jsonify([{
         "id": r.id,
@@ -413,6 +448,8 @@ def get_reviews(game_id):
 
 @app.route('/api/translate', methods=['POST', 'OPTIONS'])
 def translate_description():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     data = request.get_json()
     text_to_translate = data.get('text', '')
     
@@ -436,6 +473,8 @@ def translate_description():
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
 @jwt_required(optional=True)
 def upload_image():
+    if request.method == 'OPTIONS': return jsonify({}), 200
+    
     user_id = get_jwt_identity()
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
 
