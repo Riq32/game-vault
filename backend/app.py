@@ -120,7 +120,7 @@ def login():
         
     return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/api/profile', methods=['GET', 'PUT'])
+@app.route('/api/profile', methods=['GET', 'PATCH'])
 @jwt_required()
 def profile():
     user_id = get_jwt_identity()
@@ -135,7 +135,7 @@ def profile():
             "vault_count": len(user.vault_items)
         }), 200
         
-    if request.method == 'PUT':
+    if request.method == 'PATCH':
         data = request.get_json()
         if 'avatar_url' in data:
             user.avatar_url = data['avatar_url']
@@ -272,7 +272,7 @@ def handle_vault():
         db.session.commit()
         return jsonify({"message": "Asset secured in vault"}), 201
 
-@app.route('/api/vault/<int:item_id>', methods=['PUT', 'DELETE'])
+@app.route('/api/vault/<int:item_id>', methods=['PATCH', 'DELETE'])
 @jwt_required()
 def modify_vault_item(item_id):
     user_id = get_jwt_identity()
@@ -281,7 +281,7 @@ def modify_vault_item(item_id):
     if not item:
         return jsonify({"error": "Item not found"}), 404
         
-    if request.method == 'PUT':
+    if request.method == 'PATCH':
         data = request.get_json()
         item.status = data.get('status', item.status)
         db.session.commit()
