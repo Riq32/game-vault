@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, Link as LinkIcon, Check, MessageCircle, Twitter, Facebook, Linkedin, Smartphone } from 'lucide-react';
+import { Share2, Link as LinkIcon, Check, MessageCircle, Smartphone } from 'lucide-react';
 
 export default function ShareMenu({ contentText, shareUrl }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,19 +54,34 @@ export default function ShareMenu({ contentText, shareUrl }) {
     },
     {
       name: 'X (Twitter)',
-      icon: <Twitter size={16} />,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
+          <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
+        </svg>
+      ),
       url: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
       color: 'hover:text-zinc-300 hover:bg-zinc-800'
     },
     {
       name: 'Facebook',
-      icon: <Facebook size={16} />,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+        </svg>
+      ),
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
       color: 'hover:text-blue-500 hover:bg-blue-500/10'
     },
     {
       name: 'LinkedIn',
-      icon: <Linkedin size={16} />,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+          <rect x="2" y="9" width="4" height="12"/>
+          <circle cx="4" cy="4" r="2"/>
+        </svg>
+      ),
       url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
       color: 'hover:text-blue-400 hover:bg-blue-400/10'
     }
