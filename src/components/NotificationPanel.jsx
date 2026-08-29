@@ -13,10 +13,8 @@ export default function NotificationPanel({ isOpen, onClose }) {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/notifications', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Manual headers removed.
+      const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/notifications');
       setNotifications(response.data);
     } catch (err) {
       console.error('Failed to decrypt notifications array.');
@@ -27,10 +25,8 @@ export default function NotificationPanel({ isOpen, onClose }) {
 
   const markAsRead = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`https://game-vault-backend-n7ul.onrender.com/api/notifications/${id}/read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Manual headers removed.
+      await axios.patch(`https://game-vault-backend-n7ul.onrender.com/api/notifications/${id}/read`);
       setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
     } catch (err) {
       console.error(err);
@@ -39,10 +35,8 @@ export default function NotificationPanel({ isOpen, onClose }) {
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`https://game-vault-backend-n7ul.onrender.com/api/notifications/read-all`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Manual headers removed.
+      await axios.patch(`https://game-vault-backend-n7ul.onrender.com/api/notifications/read-all`);
       setNotifications(notifications.map(n => ({ ...n, is_read: true })));
     } catch (err) {
       console.error(err);
@@ -67,9 +61,7 @@ export default function NotificationPanel({ isOpen, onClose }) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Invisible backdrop to close panel when clicking outside */}
           <div className="fixed inset-0 z-40" onClick={onClose}></div>
-          
           <motion.div 
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

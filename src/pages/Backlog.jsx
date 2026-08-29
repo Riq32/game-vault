@@ -20,9 +20,8 @@ export default function Backlog() {
     if (!token) return navigate('/auth');
 
     try {
-      const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/vault', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Manual headers removed!
+      const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/vault');
       setVaultItems(response.data);
     } catch (err) {
       setError('Failed to sync with the central vault.');
@@ -32,12 +31,11 @@ export default function Backlog() {
   };
 
   const updateStatus = async (itemId, newStatus) => {
-    const token = localStorage.getItem('token');
     try {
+      // Manual headers removed!
       const response = await axios.patch(
         `https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { status: newStatus }
       );
       
       setVaultItems(vaultItems.map(item => item.id === itemId ? { ...item, status: newStatus } : item));
@@ -65,11 +63,9 @@ export default function Backlog() {
   };
 
   const removeGame = async (itemId) => {
-    const token = localStorage.getItem('token');
     try {
-      await axios.delete(`https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Manual headers removed!
+      await axios.delete(`https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`);
       setVaultItems(vaultItems.filter(item => item.id !== itemId));
     } catch (err) {
       alert("Failed to remove game.");

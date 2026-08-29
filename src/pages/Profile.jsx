@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Settings, Gamepad2, Trophy, Clock, Target, Loader2, AlertCircle, LogOut, Edit2, Save, X, CheckCircle2, Zap, Flame } from 'lucide-react';
+import { User, Settings, Gamepad2, Trophy, Clock, Target, Loader2, LogOut, Edit2, X, Zap, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -24,9 +24,8 @@ export default function Profile() {
     const fetchProfileData = async () => {
       if (!token) return navigate('/auth');
       try {
-        const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Manual headers removed!
+        const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/profile');
         setProfileData(response.data);
         setFormData({
           displayName: response.data.username || '',
@@ -65,17 +64,18 @@ export default function Profile() {
         } else if (imagePayload.type === 'file') {
           const uploadData = new FormData();
           uploadData.append('image', imagePayload.data);
+          // Removed manual auth headers, kept Content-Type
           const uploadRes = await axios.post('https://game-vault-backend-n7ul.onrender.com/api/upload', uploadData, {
-            headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
+            headers: { 'Content-Type': 'multipart/form-data' } 
           });
           finalImageUrl = `https://game-vault-backend-n7ul.onrender.com${uploadRes.data.url}`;
         }
       }
 
       const updatedProfile = { username: formData.displayName, email: formData.email, avatar_url: finalImageUrl };
-      const response = await axios.patch('https://game-vault-backend-n7ul.onrender.com/api/profile', updatedProfile, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      
+      // Manual headers removed!
+      const response = await axios.patch('https://game-vault-backend-n7ul.onrender.com/api/profile', updatedProfile);
       
       setProfileData({ ...profileData, ...updatedProfile });
       setFormData({ ...formData, profilePic: finalImageUrl });

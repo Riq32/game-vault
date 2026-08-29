@@ -11,13 +11,13 @@ export default function Leaderboard() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      // We keep this check to bounce unauthenticated users immediately
       const token = localStorage.getItem('token');
       if (!token) return navigate('/auth');
 
       try {
-        const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/leaderboard', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // 🛡️ Manual headers removed! The Global Interceptor handles this now.
+        const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/leaderboard');
         setLeaderboard(response.data);
       } catch (err) {
         console.error("Failed to decrypt leaderboard.");

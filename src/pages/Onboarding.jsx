@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 import { Gamepad2, Monitor, Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function Onboarding() {
@@ -11,7 +10,6 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
-  const { token } = useAuth();
 
   const platforms = ['Windows PC', 'PS5', 'PS4', 'Xbox Series X', 'Xbox One', 'Switch'];
   const genres = ['Action', 'RPG', 'Shooter', 'Adventure', 'Strategy', 'Simulation', 'Puzzle', 'Racing'];
@@ -24,11 +22,10 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Explicitly calling /api/preferences
+      // Manual headers removed. The Global Interceptor handles this automatically.
       await axios.post(
         'https://game-vault-backend-n7ul.onrender.com/api/preferences',
-        { platforms: selectedPlatforms, genres: selectedGenres },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { platforms: selectedPlatforms, genres: selectedGenres }
       );
       navigate('/discover');
     } catch (error) {

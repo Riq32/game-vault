@@ -21,10 +21,8 @@ export default function Discover() {
         setGames(data.results || []); 
         
         if (token) {
-          // Explicitly calling /api/recommendations
-          const recResponse = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/recommendations', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          // Manual headers removed!
+          const recResponse = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/recommendations');
           setRecommendedGames(recResponse.data || []);
         }
       } catch (err) {
@@ -44,11 +42,10 @@ export default function Discover() {
     }
 
     try {
-      // Explicitly calling /api/vault
+      // Manual headers removed!
       await axios.post(
         'https://game-vault-backend-n7ul.onrender.com/api/vault',
-        { game_id: game.id, game_name: game.name },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { game_id: game.id, game_name: game.name }
       );
       setSavedGames(prev => ({ ...prev, [game.id]: true }));
     } catch (err) {

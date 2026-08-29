@@ -7,7 +7,7 @@ import { fetchGameDetails } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import axios from 'axios';
-import ShareMenu from '../components/ShareMenu'; // <-- Imported ShareMenu
+import ShareMenu from '../components/ShareMenu'; 
 
 export default function GameDetail() {
   const { id } = useParams();
@@ -82,16 +82,15 @@ export default function GameDetail() {
 
     setIsSubmittingReview(true);
     try {
+      // Manual auth headers removed!
       const response = await axios.post(
         'https://game-vault-backend-n7ul.onrender.com/api/reviews',
-        { game_id: id, rating: rating, text: reviewText },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { game_id: id, rating: rating, text: reviewText }
       );
       
-      // Optimistic update: Inject the new review into the feed dynamically
       setReviews([response.data.review, ...reviews]);
       setReviewText('');
-      setRating(5); // Reset stars
+      setRating(5); 
     } catch (err) {
       console.error(err);
       alert("Failed to transmit review to central server.");
@@ -102,7 +101,6 @@ export default function GameDetail() {
 
   return (
     <div className="bg-[var(--color-vault-black)] min-h-screen text-[var(--color-text-primary)] pb-24">
-      
       {/* 1. CINEMATIC HERO SECTION */}
       <div className="relative w-full h-[60vh] md:h-[75vh] bg-black overflow-hidden">
         {game.clip ? (
@@ -125,7 +123,6 @@ export default function GameDetail() {
                 <Star size={14} className="fill-[var(--color-neon-cyan)]" /> {game.rating}
               </div>
               
-              {/* Main Game Page Share */}
               <ShareMenu 
                 contentText={`Check out ${game.name} on Game Vault!`} 
                 shareUrl={window.location.href} 
@@ -141,10 +138,8 @@ export default function GameDetail() {
 
       {/* 2. MAIN CONTENT GRID */}
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
-        
         <div className="lg:col-span-2 space-y-12">
           
-          {/* AI Translation & Description */}
           <section className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-8 rounded-3xl relative overflow-hidden group">
             <div className="flex justify-between items-center mb-6 border-b border-[var(--color-vault-border)] pb-4">
               <h2 className="text-2xl font-black tracking-tight">Data Log</h2>
@@ -164,7 +159,6 @@ export default function GameDetail() {
             />
           </section>
 
-          {/* Gameplay Previews */}
           <section>
             <h2 className="text-3xl font-black tracking-tight mb-6 flex items-center gap-3">
               <ImageIcon className="text-[var(--color-neon-cyan)]" /> Visual Intel
@@ -190,7 +184,6 @@ export default function GameDetail() {
             </div>
           </section>
 
-          {/* Interactive Review System */}
           <section>
             <h2 className="text-3xl font-black tracking-tight mb-8 flex items-center gap-3">
               <MessageSquare className="text-[var(--color-neon-cyan)]" /> Player Comm-Link
@@ -205,7 +198,6 @@ export default function GameDetail() {
               />
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-[var(--color-vault-border)]">
                 <div className="flex gap-2">
-                  {/* Interactive Star Rating */}
                   {[1,2,3,4,5].map(star => (
                     <Star 
                       key={star} 
@@ -260,7 +252,6 @@ export default function GameDetail() {
                             </div>
                           </div>
                           
-                          {/* Individual Review Share */}
                           <ShareMenu 
                             contentText={`"${review.text}" - Read ${review.user}'s full review of ${game.name} on Game Vault.`} 
                             shareUrl={window.location.href} 
@@ -276,7 +267,6 @@ export default function GameDetail() {
           </section>
         </div>
 
-        {/* RIGHT COLUMN: Stores & Meta Details */}
         <div className="space-y-6">
           <div className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-6 rounded-3xl">
             <h3 className="text-xl font-black mb-6 tracking-tight flex items-center gap-2 border-b border-[var(--color-vault-border)] pb-4">
