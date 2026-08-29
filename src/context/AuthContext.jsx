@@ -23,7 +23,8 @@ export function AuthProvider({ children }) {
   });
 
   useLayoutEffect(() => {
-    // 🛡️ REQUEST INTERCEPTOR: Attach clean token
+    // 🛡️ REQUEST INTERCEPTOR ONLY
+    // Safely attaches the token to outgoing requests but does NOT force reloads
     const reqInterceptor = axios.interceptors.request.use((config) => {
       const currentToken = localStorage.getItem('token');
       if (currentToken && currentToken !== 'undefined' && currentToken !== 'null' && currentToken !== '[object Object]') {
@@ -34,32 +35,8 @@ export function AuthProvider({ children }) {
       return config;
     });
 
-    // 🛡️ RESPONSE INTERCEPTOR: Auto-Nuke corrupted sessions
-    const resInterceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        // THE FIX: Ignore 401s that come directly from the login or register attempts
-        const isAuthRequest = error.config && error.config.url && 
-          (error.config.url.includes('/login') || error.config.url.includes('/register'));
-
-        if (!isAuthRequest && error.response && (error.response.status === 401 || error.response.status === 422)) {
-          console.warn("Invalid session detected. Purging corrupted cache.");
-          
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          delete axios.defaults.headers.common['Authorization'];
-          
-          if (window.location.pathname !== '/auth') {
-            window.location.href = '/auth';
-          }
-        }
-        return Promise.reject(error);
-      }
-    );
-
     return () => {
       axios.interceptors.request.eject(reqInterceptor);
-      axios.interceptors.response.eject(resInterceptor);
     };
   }, []);
 
@@ -79,7 +56,6 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    window.location.href = '/auth'; 
   };
 
   const updateUser = (updatedData) => {
