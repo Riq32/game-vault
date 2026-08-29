@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Settings, Gamepad2, Trophy, Clock, Target, Loader2, AlertCircle, LogOut, Edit2, Save, X, Mail, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
+import { User, Settings, Gamepad2, Trophy, Clock, Target, Loader2, AlertCircle, LogOut, Edit2, Save, X, Mail, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
+import ImageUploader from '../components/ImageUploader';
 
 export default function Profile() {
   const [profileData, setProfileData] = useState(null);
@@ -14,6 +15,7 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({ displayName: '', email: '', profilePic: '' });
+  const [imagePayload, setImagePayload] = useState(null);
   
   const navigate = useNavigate();
   const { token, logout, updateUser } = useAuth(); 
@@ -60,12 +62,41 @@ export default function Profile() {
       return;
     }
 
+    let finalImageUrl = formData.profilePic;
+
     try {
-      const response = await axios.put('https://game-vault-backend-n7ul.onrender.com/api/profile', formData, {
+      if (imagePayload) {
+        if (imagePayload.type === 'url') {
+          finalImageUrl = imagePayload.data;
+        } else if (imagePayload.type === 'file') {
+          const uploadData = new FormData();
+          uploadData.append('image', imagePayload.data);
+
+          const uploadRes = await axios.post('https://game-vault-backend-n7ul.onrender.com/api/upload', uploadData, {
+            headers: { 
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}` 
+            }
+          });
+          finalImageUrl = `https://game-vault-backend-n7ul.onrender.com${uploadRes.data.url}`;
+        }
+      }
+
+      const updatedProfile = {
+        displayName: formData.displayName,
+        email: formData.email,
+        profilePic: finalImageUrl
+      };
+
+      const response = await axios.put('https://game-vault-backend-n7ul.onrender.com/api/profile', updatedProfile, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setProfileData({ ...profileData, ...formData });
-      updateUser(response.data.user); 
+      
+      setProfileData({ ...profileData, ...updatedProfile });
+      setFormData({ ...formData, profilePic: finalImageUrl });
+      if (response.data.user) {
+        updateUser(response.data.user); 
+      }
       setSaveMessage({ type: 'success', text: 'Identity updated securely.' });
       setTimeout(() => { setIsEditing(false); setSaveMessage({ type: '', text: '' }); }, 2000);
     } catch (err) {
@@ -151,16 +182,8 @@ export default function Profile() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-widest mb-2">Avatar URL (Image Link)</label>
-                  <div className="relative group mb-4">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><ImageIcon className="text-[var(--color-text-secondary)]" size={18} /></div>
-                    <input type="url" value={formData.profilePic} onChange={(e) => setFormData({...formData, profilePic: e.target.value})} className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)]" />
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] rounded-xl">
-                    <div className="w-16 h-16 rounded-full border border-[var(--color-vault-border)] overflow-hidden bg-[var(--color-vault-surface)] flex items-center justify-center">
-                      {formData.profilePic ? <img src={formData.profilePic} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : <User size={24} className="text-[var(--color-text-secondary)]" />}
-                    </div>
-                  </div>
+                  <label className="block text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-widest mb-2">Visual Parameters</label>
+                  <ImageUploader onImageSelect={setImagePayload} currentAvatar={formData.profilePic} />
                 </div>
               </div>
               <div className="flex justify-end gap-4 border-t border-[var(--color-vault-border)] pt-6">
@@ -173,22 +196,24 @@ export default function Profile() {
           )}
         </motion.div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: "Total Tracked", value: profileData.stats.total, icon: <Gamepad2 size={20} />, color: "text-white" },
-            { label: "Completed", value: profileData.stats.completed, icon: <Trophy size={20} />, color: "text-yellow-400" },
-            { label: "Currently Playing", value: profileData.stats.playing, icon: <Target size={20} />, color: "text-[var(--color-neon-cyan)]" },
-            { label: "Backlog", value: profileData.stats.backlog, icon: <Clock size={20} />, color: "text-zinc-400" }
-          ].map((stat, idx) => (
-            <motion.div key={idx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-6 rounded-2xl flex flex-col justify-between h-32">
-              <div className="flex justify-between items-start text-[var(--color-text-secondary)]">
-                <span className="text-xs font-bold uppercase tracking-wider">{stat.label}</span>
-                <span className={stat.color}>{stat.icon}</span>
-              </div>
-              <div className="text-4xl font-black">{stat.value}</div>
-            </motion.div>
-          ))}
-        </div>
+        {profileData.stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "Total Tracked", value: profileData.stats.total, icon: <Gamepad2 size={20} />, color: "text-white" },
+              { label: "Completed", value: profileData.stats.completed, icon: <Trophy size={20} />, color: "text-yellow-400" },
+              { label: "Currently Playing", value: profileData.stats.playing, icon: <Target size={20} />, color: "text-[var(--color-neon-cyan)]" },
+              { label: "Backlog", value: profileData.stats.backlog, icon: <Clock size={20} />, color: "text-zinc-400" }
+            ].map((stat, idx) => (
+              <motion.div key={idx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] p-6 rounded-2xl flex flex-col justify-between h-32">
+                <div className="flex justify-between items-start text-[var(--color-text-secondary)]">
+                  <span className="text-xs font-bold uppercase tracking-wider">{stat.label}</span>
+                  <span className={stat.color}>{stat.icon}</span>
+                </div>
+                <div className="text-4xl font-black">{stat.value}</div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
