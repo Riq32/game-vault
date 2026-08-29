@@ -14,6 +14,7 @@ export default function Auth() {
   const { login } = useAuth();
 
   useEffect(() => {
+    // Purge local storage on mount for a clean slate
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
@@ -51,7 +52,8 @@ export default function Auth() {
       const response = await axios.post(url, payload);
       
       const { token, username, full_name } = response.data;
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // 🛡️ REMOVED THE CONFLICTING AXIOS.DEFAULTS LINE HERE
       
       login(token, {
         username: username,
