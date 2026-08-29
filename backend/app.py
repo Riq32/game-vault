@@ -10,7 +10,6 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import openai
 
-# Import ORM models from models.py
 from models import db, User, VaultItem, Review, Preference, Notification
 
 # ==========================================
@@ -18,12 +17,12 @@ from models import db, User, VaultItem, Review, Preference, Notification
 # ==========================================
 app = Flask(__name__)
 
-# EXPLICIT CORS CONFIGURATION (Fixes 422 Preflight & OPTIONS blocks)
+# Complete CORS configuration allowing all methods, credentials, and headers
 CORS(app, resources={
     r"/api/*": {
         "origins": "*",
         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
     }
 })
 
@@ -76,13 +75,11 @@ def calculate_gamification_state(total_xp):
     }
 
 def generate_smart_notifications(user):
-    # 1. Leaderboard Movement Check
     current_rank = User.query.filter(User.xp > user.xp).count() + 1
     if user.last_rank != 0 and current_rank < user.last_rank:
         db.session.add(Notification(user_id=user.id, title="Rank Up", message=f"You climbed the global leaderboard to Rank {current_rank}!", type="leaderboard"))
     user.last_rank = current_rank
 
-    # 2. Backlog Reminder
     backlog_items = [i for i in user.vault_items if i.status == 'Backlog']
     if backlog_items and random.random() > 0.4: 
         game = random.choice(backlog_items)
@@ -90,7 +87,6 @@ def generate_smart_notifications(user):
         if not existing:
             db.session.add(Notification(user_id=user.id, title="Vault Reminder", message=f"'{game.game_name}' has been sitting in your backlog. Is it time to deploy?", type="reminder"))
     
-    # 3. Preference Recommendations
     if user.preferences and user.preferences.genres:
         genres = [g.strip().capitalize() for g in user.preferences.genres.split(',')]
         if genres and random.random() > 0.5: 
@@ -100,14 +96,13 @@ def generate_smart_notifications(user):
 # ==========================================
 # 3. IDENTITY & AUTHENTICATION
 # ==========================================
-@app.route('/api/status', methods=['GET'])
+@app.route('/api/status', methods=['GET', 'OPTIONS'])
 def health_check():
     return jsonify({"status": "Online"}), 200
 
-@app.route('/api/register', methods=['POST'])
+@app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():
     data = request.get_json()
-    
     if not all(k in data for k in ("full_name", "username", "email", "password")):
         return jsonify({"error": "All fields are required"}), 400
         
@@ -128,7 +123,7 @@ def register():
     db.session.commit()
     return jsonify({"token": create_access_token(identity=new_user.id), "username": new_user.username, "full_name": new_user.full_name}), 201
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login', methods=['POST', 'OPTIONS'])
 def login():
     data = request.get_json()
     user = User.query.filter_by(email=data.get('email')).first()
@@ -137,9 +132,15 @@ def login():
     return jsonify({"error": "Invalid credentials"}), 401
 
 @app.route('/api/profile', methods=['GET', 'PATCH', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def profile():
-    user = User.query.get(get_jwt_identity())
+    current_user_id = get_jwt_identity()
+    if not current_user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user = User.query.get(current_user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
     
     if request.method == 'GET':
         today = datetime.utcnow().date()
@@ -200,30 +201,39 @@ def profile():
 # ==========================================
 # 4. NOTIFICATIONS & LEADERBOARD
 # ==========================================
-@app.route('/api/notifications', methods=['GET'])
-@jwt_required()
+@app.route('/api/notifications', methods=['GET', 'OPTIONS'])
+@jwt_required(optional=True)
 def get_notifications():
-    notifs = Notification.query.filter_by(user_id=get_jwt_identity()).order_by(Notification.created_at.desc()).limit(20).all()
+    current_user_id = get_jwt_identity()
+    if not current_user_id: return jsonify([]), 200
+
+    notifs = Notification.query.filter_by(user_id=current_user_id).order_by(Notification.created_at.desc()).limit(20).all()
     return jsonify([{"id": n.id, "title": n.title, "message": n.message, "type": n.type, "is_read": n.is_read, "date": n.created_at.strftime("%Y-%m-%d %H:%M")} for n in notifs]), 200
 
 @app.route('/api/notifications/<int:notif_id>/read', methods=['PATCH', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def read_notification(notif_id):
-    notif = Notification.query.filter_by(id=notif_id, user_id=get_jwt_identity()).first()
+    current_user_id = get_jwt_identity()
+    if not current_user_id: return jsonify({"error": "Unauthorized"}), 401
+
+    notif = Notification.query.filter_by(id=notif_id, user_id=current_user_id).first()
     if notif:
         notif.is_read = True
         db.session.commit()
     return jsonify({"message": "Marked as read"}), 200
 
 @app.route('/api/notifications/read-all', methods=['PATCH', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def read_all_notifications():
-    Notification.query.filter_by(user_id=get_jwt_identity(), is_read=False).update({"is_read": True})
+    current_user_id = get_jwt_identity()
+    if not current_user_id: return jsonify({"error": "Unauthorized"}), 401
+
+    Notification.query.filter_by(user_id=current_user_id, is_read=False).update({"is_read": True})
     db.session.commit()
     return jsonify({"message": "All marked as read"}), 200
 
-@app.route('/api/leaderboard', methods=['GET'])
-@jwt_required()
+@app.route('/api/leaderboard', methods=['GET', 'OPTIONS'])
+@jwt_required(optional=True)
 def get_leaderboard():
     current_user_id = get_jwt_identity()
     users = User.query.order_by(User.xp.desc(), User.current_streak.desc()).limit(100).all()
@@ -236,9 +246,11 @@ def get_leaderboard():
 # 5. VAULT & PREFERENCES
 # ==========================================
 @app.route('/api/vault', methods=['GET', 'POST', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def handle_vault():
     user_id = get_jwt_identity()
+    if not user_id: return jsonify({"error": "Unauthorized"}), 401
+
     if request.method == 'GET':
         items = VaultItem.query.filter_by(user_id=user_id).order_by(VaultItem.added_date.desc()).all()
         return jsonify([{"id": i.id, "game_id": i.game_id, "game_name": i.game_name, "status": i.status} for i in items]), 200
@@ -253,9 +265,11 @@ def handle_vault():
     return jsonify({"message": "Secured in vault"}), 201
 
 @app.route('/api/vault/<int:item_id>', methods=['PATCH', 'DELETE', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def modify_vault_item(item_id):
     user_id = get_jwt_identity()
+    if not user_id: return jsonify({"error": "Unauthorized"}), 401
+
     item = VaultItem.query.filter_by(id=item_id, user_id=user_id).first()
     if not item: return jsonify({"error": "Item not found"}), 404
         
@@ -297,9 +311,11 @@ def modify_vault_item(item_id):
     return jsonify({"message": "Asset expunged"}), 200
 
 @app.route('/api/preferences', methods=['POST', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def save_preferences():
     user_id = get_jwt_identity()
+    if not user_id: return jsonify({"error": "Unauthorized"}), 401
+
     pref = Preference.query.filter_by(user_id=user_id).first() or Preference(user_id=user_id)
     db.session.add(pref)
     pref.platforms = ",".join(request.get_json().get('platforms', []))
@@ -310,7 +326,7 @@ def save_preferences():
 # ==========================================
 # 6. EXTERNAL PROXIES (RAWG & AI), FILE I/O & REVIEWS
 # ==========================================
-@app.route('/api/games', methods=['GET'])
+@app.route('/api/games', methods=['GET', 'OPTIONS'])
 def get_games():
     page = request.args.get('page', 1)
     search = request.args.get('search', '')
@@ -323,7 +339,6 @@ def get_games():
         response.raise_for_status()
         return jsonify(response.json()), 200
     except requests.exceptions.RequestException:
-        # Automated Mock Fallback Data if RAWG goes down
         return jsonify({
             "results": [
                 {"id": 1, "name": "System Override (Fallback)", "rating": 5.0, "released": "2026-01-01"},
@@ -331,7 +346,7 @@ def get_games():
             ]
         }), 200
 
-@app.route('/api/games/<int:game_id>', methods=['GET'])
+@app.route('/api/games/<int:game_id>', methods=['GET', 'OPTIONS'])
 def get_game_details(game_id):
     try:
         response = requests.get(f"https://api.rawg.io/api/games/{game_id}?key={RAWG_API_KEY}", timeout=10)
@@ -340,11 +355,11 @@ def get_game_details(game_id):
     except requests.exceptions.RequestException:
         return jsonify({"error": "Target intellectual property not found."}), 404
 
-@app.route('/api/recommendations', methods=['GET'])
-@jwt_required()
+@app.route('/api/recommendations', methods=['GET', 'OPTIONS'])
+@jwt_required(optional=True)
 def get_recommendations():
     user_id = get_jwt_identity()
-    pref = Preference.query.filter_by(user_id=user_id).first()
+    pref = Preference.query.filter_by(user_id=user_id).first() if user_id else None
     
     tags = "singleplayer"
     if pref and pref.genres:
@@ -358,9 +373,11 @@ def get_recommendations():
         return jsonify([]), 200
 
 @app.route('/api/reviews', methods=['POST', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def post_review():
     user_id = get_jwt_identity()
+    if not user_id: return jsonify({"error": "Unauthorized"}), 401
+
     data = request.get_json()
     new_review = Review(
         user_id=user_id,
@@ -383,7 +400,7 @@ def post_review():
         }
     }), 201
 
-@app.route('/api/reviews/<int:game_id>', methods=['GET'])
+@app.route('/api/reviews/<int:game_id>', methods=['GET', 'OPTIONS'])
 def get_reviews(game_id):
     reviews = Review.query.filter_by(game_id=game_id).order_by(Review.created_at.desc()).all()
     return jsonify([{
@@ -417,18 +434,21 @@ def translate_description():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def upload_image():
+    user_id = get_jwt_identity()
+    if not user_id: return jsonify({"error": "Unauthorized"}), 401
+
     if 'image' not in request.files: 
         return jsonify({"error": "No visual data detected"}), 400
     file = request.files['image']
     if file.filename == '' or not allowed_file(file.filename): 
         return jsonify({"error": "Invalid file"}), 400
-    filename = secure_filename(f"user_{get_jwt_identity()}_{file.filename}")
+    filename = secure_filename(f"user_{user_id}_{file.filename}")
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return jsonify({"url": f"/static/uploads/{filename}", "message": "Visual data secured"}), 201
 
-@app.route('/static/uploads/<filename>')
+@app.route('/static/uploads/<filename>', methods=['GET'])
 def serve_uploaded_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
