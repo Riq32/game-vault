@@ -15,6 +15,9 @@ class User(db.Model):
     
     # Gamification State
     xp = db.Column(db.Integer, default=0, nullable=False)
+    current_streak = db.Column(db.Integer, default=0, nullable=False)
+    highest_streak = db.Column(db.Integer, default=0, nullable=False)
+    last_login_date = db.Column(db.Date, nullable=True)
     
     vault_items = db.relationship('VaultItem', backref='user', lazy=True, cascade='all, delete-orphan')
     reviews = db.relationship('Review', backref='author', lazy=True, cascade='all, delete-orphan')
@@ -30,7 +33,6 @@ class VaultItem(db.Model):
     status = db.Column(db.String(50), default='Backlog')
     added_date = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Gamification Tracking
     xp_awarded = db.Column(db.Boolean, default=False, nullable=False)
 
 class Review(db.Model):

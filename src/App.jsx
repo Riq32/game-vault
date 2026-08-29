@@ -16,6 +16,7 @@ import Auth from './pages/Auth';
 import Onboarding from './pages/Onboarding';
 import Profile from './pages/Profile';
 import About from './pages/About';
+import Leaderboard from './pages/Leaderboard'; // <-- Gamification Leaderboard added
 
 // Security wrapper to prevent unauthorized access to private pages
 const ProtectedRoute = ({ children }) => {
@@ -73,6 +74,16 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Global Gamification (Protected) */}
+              <Route 
+                path="/leaderboard" 
+                element={
+                  <ProtectedRoute>
+                    <Leaderboard />
                   </ProtectedRoute>
                 } 
               />
