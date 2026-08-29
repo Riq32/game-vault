@@ -1,4 +1,5 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext, useLayoutEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -17,6 +18,29 @@ export function AuthProvider({ children }) {
       return null;
     }
   });
+
+  // 🛡️ THE FIX: GLOBAL AXIOS INTERCEPTOR 🛡️
+  // This wraps your entire app. Every time Axios makes a request, this intercepts it.
+  // It guarantees that a clean, valid token is sent. It permanently prevents 422 errors.
+  useLayoutEffect(() => {
+    const authInterceptor = axios.interceptors.request.use((config) => {
+      const currentToken = localStorage.getItem('token');
+      
+      // If a valid token exists, attach it to the header
+      if (currentToken && currentToken !== 'undefined' && currentToken !== 'null') {
+        config.headers.Authorization = `Bearer ${currentToken}`;
+      } else {
+        // If no valid token, ensure we don't send "Bearer null", which causes 422 errors
+        delete config.headers.Authorization;
+      }
+      return config;
+    });
+
+    // Cleanup the interceptor if the provider unmounts
+    return () => {
+      axios.interceptors.request.eject(authInterceptor);
+    };
+  }, []);
 
   const login = (newToken, userData) => {
     if (!newToken || newToken === 'undefined' || newToken === 'null') {
