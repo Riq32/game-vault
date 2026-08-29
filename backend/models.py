@@ -22,6 +22,18 @@ class User(db.Model):
     vault_items = db.relationship('VaultItem', backref='user', lazy=True, cascade='all, delete-orphan')
     reviews = db.relationship('Review', backref='author', lazy=True, cascade='all, delete-orphan')
     preferences = db.relationship('Preference', backref='user', uselist=False, cascade='all, delete-orphan')
+    notifications = db.relationship('Notification', backref='user', lazy=True, cascade='all, delete-orphan')
+
+class Notification(db.Model):
+    __tablename__ = 'notification'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+    type = db.Column(db.String(50), default='system') # reminder, recommendation, activity
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class VaultItem(db.Model):
     __tablename__ = 'vault_item'
@@ -32,7 +44,6 @@ class VaultItem(db.Model):
     game_name = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(50), default='Backlog')
     added_date = db.Column(db.DateTime, default=datetime.utcnow)
-    
     xp_awarded = db.Column(db.Boolean, default=False, nullable=False)
 
 class Review(db.Model):

@@ -1,5 +1,6 @@
 import os
 import requests
+import random
 from datetime import datetime, timedelta, date
 from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
@@ -8,7 +9,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import openai
-from models import db, User, VaultItem, Review, Preference
+from models import db, User, VaultItem, Review, Preference, Notification
 
 # ==========================================
 # 1. INITIALIZATION & CONFIGURATION
@@ -62,6 +63,22 @@ def calculate_gamification_state(total_xp):
         "xp_needed": xp_needed_for_next,
         "progress_percentage": progress_percentage
     }
+
+def generate_smart_notifications(user):
+    # 1. Backlog Reminder
+    backlog_items = [i for i in user.vault_items if i.status == 'Backlog']
+    if backlog_items and random.random() > 0.4: # 60% chance to generate reminder
+        game = random.choice(backlog_items)
+        existing = Notification.query.filter_by(user_id=user.id, type='reminder').filter(Notification.message.contains(game.game_name)).first()
+        if not existing:
+            db.session.add(Notification(user_id=user.id, title="Vault Reminder", message=f"'{game.game_name}' has been sitting in your backlog. Is it time to deploy?", type="reminder"))
+    
+    # 2. Preference Recommendations
+    if user.preferences and user.preferences.genres:
+        genres = [g.strip().capitalize() for g in user.preferences.genres.split(',')]
+        if genres and random.random() > 0.5: # 50% chance to generate recommendation
+            genre = random.choice(genres)
+            db.session.add(Notification(user_id=user.id, title="Algorithm Suggestion", message=f"Based on your directives, we recommend exploring top-rated {genre} titles in the Discover tab.", type="recommendation"))
 
 # ==========================================
 # 3. API ROUTES
@@ -118,7 +135,10 @@ def profile():
                 daily_reward += 50
                 user.xp += 50
                 streak_milestone = True
-                
+                db.session.add(Notification(user_id=user.id, title="Streak Milestone", message=f"Flawless {user.current_streak}-day operation streak! +50 Bonus XP awarded.", type="activity"))
+            
+            # Trigger Smart Notifications Engine on new daily login
+            generate_smart_notifications(user)
             db.session.commit()
 
         return jsonify({
@@ -149,6 +169,34 @@ def profile():
         db.session.commit()
         return jsonify({"message": "Identity updated successfully", "user": {"username": user.username}}), 200
 
+# ==========================================
+# 4. NOTIFICATION ROUTES
+# ==========================================
+@app.route('/api/notifications', methods=['GET'])
+@jwt_required()
+def get_notifications():
+    notifs = Notification.query.filter_by(user_id=get_jwt_identity()).order_by(Notification.created_at.desc()).limit(20).all()
+    return jsonify([{"id": n.id, "title": n.title, "message": n.message, "type": n.type, "is_read": n.is_read, "date": n.created_at.strftime("%Y-%m-%d")} for n in notifs]), 200
+
+@app.route('/api/notifications/<int:notif_id>/read', methods=['PATCH'])
+@jwt_required()
+def read_notification(notif_id):
+    notif = Notification.query.filter_by(id=notif_id, user_id=get_jwt_identity()).first()
+    if notif:
+        notif.is_read = True
+        db.session.commit()
+    return jsonify({"message": "Marked as read"}), 200
+
+@app.route('/api/notifications/read-all', methods=['PATCH'])
+@jwt_required()
+def read_all_notifications():
+    Notification.query.filter_by(user_id=get_jwt_identity(), is_read=False).update({"is_read": True})
+    db.session.commit()
+    return jsonify({"message": "All marked as read"}), 200
+
+# ==========================================
+# 5. REMAINING CORE ROUTES
+# ==========================================
 @app.route('/api/leaderboard', methods=['GET'])
 @jwt_required()
 def get_leaderboard():
@@ -189,6 +237,7 @@ def modify_vault_item(item_id):
             xp_gained = 100
             user.xp += xp_gained
             item.xp_awarded = True
+            db.session.add(Notification(user_id=user.id, title="Mission Accomplished", message=f"You completed '{item.game_name}'. +100 XP awarded.", type="activity"))
         elif new_status != 'Completed' and item.xp_awarded:
             user.xp = max(0, user.xp - 100)
             item.xp_awarded = False
