@@ -4,7 +4,6 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  // 1. Strict Initialization: Reject anything that isn't a real token string
   const [token, setToken] = useState(() => {
     const savedToken = localStorage.getItem('token');
     if (!savedToken || savedToken === 'undefined' || savedToken === 'null' || savedToken === '[object Object]') {
@@ -39,16 +38,17 @@ export function AuthProvider({ children }) {
     const resInterceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        // If the server rejects the token (401 or 422), the session is compromised
-        if (error.response && (error.response.status === 401 || error.response.status === 422)) {
+        // THE FIX: Ignore 401s that come directly from the login or register attempts
+        const isAuthRequest = error.config && error.config.url && 
+          (error.config.url.includes('/login') || error.config.url.includes('/register'));
+
+        if (!isAuthRequest && error.response && (error.response.status === 401 || error.response.status === 422)) {
           console.warn("Invalid session detected. Purging corrupted cache.");
           
-          // Nuke the corrupted data
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           delete axios.defaults.headers.common['Authorization'];
           
-          // Force a hard redirect back to the Auth screen (if not already there)
           if (window.location.pathname !== '/auth') {
             window.location.href = '/auth';
           }
@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    window.location.href = '/auth'; // Hard reset on logout
+    window.location.href = '/auth'; 
   };
 
   const updateUser = (updatedData) => {
