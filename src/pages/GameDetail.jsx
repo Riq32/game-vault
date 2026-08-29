@@ -7,6 +7,7 @@ import { fetchGameDetails } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import axios from 'axios';
+import ShareMenu from '../components/ShareMenu'; // <-- Imported ShareMenu
 
 export default function GameDetail() {
   const { id } = useParams();
@@ -114,15 +115,21 @@ export default function GameDetail() {
         
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-vault-black)] via-[var(--color-vault-black)]/60 to-transparent"></div>
         
-        <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <div className="flex items-center gap-3 mb-4">
+        <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="flex-1">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="bg-[var(--color-vault-surface)] border border-[var(--color-vault-border)] px-3 py-1 rounded-md text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
                 {game.released ? new Date(game.released).getFullYear() : 'TBA'}
               </span>
               <div className="flex items-center gap-1 bg-[var(--color-vault-black)]/80 backdrop-blur-md border border-[var(--color-vault-border)] px-3 py-1 rounded-md text-xs font-bold text-[var(--color-neon-cyan)]">
                 <Star size={14} className="fill-[var(--color-neon-cyan)]" /> {game.rating}
               </div>
+              
+              {/* Main Game Page Share */}
+              <ShareMenu 
+                contentText={`Check out ${game.name} on Game Vault!`} 
+                shareUrl={window.location.href} 
+              />
             </div>
             
             <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter drop-shadow-2xl">
@@ -240,18 +247,26 @@ export default function GameDetail() {
                         <span className="font-black text-[var(--color-neon-cyan)] uppercase">{review.user.charAt(0)}</span>
                       </div>
                       <div className="w-full">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-[var(--color-text-primary)]">{review.user}</span>
-                            <span className="text-xs font-medium text-[var(--color-text-secondary)]">{review.date}</span>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-[var(--color-text-primary)]">{review.user}</span>
+                              <span className="text-xs font-medium text-[var(--color-text-secondary)]">{review.date}</span>
+                            </div>
+                            <div className="flex mt-1">
+                              {[1,2,3,4,5].map(star => (
+                                <Star key={star} size={14} className={star <= review.rating ? 'text-[var(--color-neon-cyan)] fill-[var(--color-neon-cyan)]' : 'text-[var(--color-vault-border)]'} />
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex">
-                            {[1,2,3,4,5].map(star => (
-                              <Star key={star} size={14} className={star <= review.rating ? 'text-[var(--color-neon-cyan)] fill-[var(--color-neon-cyan)]' : 'text-[var(--color-vault-border)]'} />
-                            ))}
-                          </div>
+                          
+                          {/* Individual Review Share */}
+                          <ShareMenu 
+                            contentText={`"${review.text}" - Read ${review.user}'s full review of ${game.name} on Game Vault.`} 
+                            shareUrl={window.location.href} 
+                          />
                         </div>
-                        <p className="text-[var(--color-text-secondary)] leading-relaxed">{review.text}</p>
+                        <p className="text-[var(--color-text-secondary)] leading-relaxed mt-2">{review.text}</p>
                       </div>
                     </motion.div>
                   ))
