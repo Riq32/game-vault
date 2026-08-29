@@ -3,17 +3,30 @@ import { createContext, useState, useContext } from 'react';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(() => {
+    const savedToken = localStorage.getItem('token');
+    return savedToken && savedToken !== 'undefined' && savedToken !== 'null' ? savedToken : null;
+  });
+  
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      return savedUser && savedUser !== 'undefined' && savedUser !== 'null' ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      localStorage.removeItem('user');
+      return null;
+    }
   });
 
   const login = (newToken, userData) => {
+    if (!newToken || newToken === 'undefined' || newToken === 'null') {
+      console.error("Authentication rejected: Invalid token payload received.");
+      return;
+    }
     localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userData || {}));
     setToken(newToken);
-    setUser(userData);
+    setUser(userData || {});
   };
 
   const logout = () => {
