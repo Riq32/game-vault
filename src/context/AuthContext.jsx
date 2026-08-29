@@ -4,9 +4,13 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  // 1. Strict Initialization: Reject anything that isn't a real token string
   const [token, setToken] = useState(() => {
     const savedToken = localStorage.getItem('token');
-    return savedToken && savedToken !== 'undefined' && savedToken !== 'null' ? savedToken : null;
+    if (!savedToken || savedToken === 'undefined' || savedToken === 'null' || savedToken === '[object Object]') {
+      return null;
+    }
+    return savedToken;
   });
   
   const [user, setUser] = useState(() => {
@@ -19,26 +23,43 @@ export function AuthProvider({ children }) {
     }
   });
 
-  // 🛡️ THE FIX: GLOBAL AXIOS INTERCEPTOR 🛡️
-  // This wraps your entire app. Every time Axios makes a request, this intercepts it.
-  // It guarantees that a clean, valid token is sent. It permanently prevents 422 errors.
   useLayoutEffect(() => {
-    const authInterceptor = axios.interceptors.request.use((config) => {
+    // 🛡️ REQUEST INTERCEPTOR: Attach clean token
+    const reqInterceptor = axios.interceptors.request.use((config) => {
       const currentToken = localStorage.getItem('token');
-      
-      // If a valid token exists, attach it to the header
-      if (currentToken && currentToken !== 'undefined' && currentToken !== 'null') {
+      if (currentToken && currentToken !== 'undefined' && currentToken !== 'null' && currentToken !== '[object Object]') {
         config.headers.Authorization = `Bearer ${currentToken}`;
       } else {
-        // If no valid token, ensure we don't send "Bearer null", which causes 422 errors
         delete config.headers.Authorization;
       }
       return config;
     });
 
-    // Cleanup the interceptor if the provider unmounts
+    // 🛡️ RESPONSE INTERCEPTOR: Auto-Nuke corrupted sessions
+    const resInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // If the server rejects the token (401 or 422), the session is compromised
+        if (error.response && (error.response.status === 401 || error.response.status === 422)) {
+          console.warn("Invalid session detected. Purging corrupted cache.");
+          
+          // Nuke the corrupted data
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          delete axios.defaults.headers.common['Authorization'];
+          
+          // Force a hard redirect back to the Auth screen (if not already there)
+          if (window.location.pathname !== '/auth') {
+            window.location.href = '/auth';
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
     return () => {
-      axios.interceptors.request.eject(authInterceptor);
+      axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
     };
   }, []);
 
@@ -58,6 +79,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    window.location.href = '/auth'; // Hard reset on logout
   };
 
   const updateUser = (updatedData) => {
