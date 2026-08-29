@@ -13,18 +13,15 @@ export default function GameDetail() {
   const { id } = useParams();
   const { data: game, loading, error } = useFetch(() => fetchGameDetails(id), id);
   
-  // AI Translation States
   const [isTranslated, setIsTranslated] = useState(true);
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
 
-  // Review States
   const [reviewText, setReviewText] = useState('');
   const [rating, setRating] = useState(5);
   const [reviews, setReviews] = useState([]);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  // Fetch reviews on component mount
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -82,7 +79,6 @@ export default function GameDetail() {
 
     setIsSubmittingReview(true);
     try {
-      // Manual auth headers removed!
       const response = await axios.post(
         'https://game-vault-backend-n7ul.onrender.com/api/reviews',
         { game_id: id, rating: rating, text: reviewText }
@@ -101,7 +97,6 @@ export default function GameDetail() {
 
   return (
     <div className="bg-[var(--color-vault-black)] min-h-screen text-[var(--color-text-primary)] pb-24">
-      {/* 1. CINEMATIC HERO SECTION */}
       <div className="relative w-full h-[60vh] md:h-[75vh] bg-black overflow-hidden">
         {game.clip ? (
           <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-60">
@@ -136,7 +131,6 @@ export default function GameDetail() {
         </div>
       </div>
 
-      {/* 2. MAIN CONTENT GRID */}
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
         <div className="lg:col-span-2 space-y-12">
           
@@ -200,7 +194,7 @@ export default function GameDetail() {
                 <div className="flex gap-2">
                   {[1,2,3,4,5].map(star => (
                     <Star 
-                      key={star} 
+                      key={`star-${star}`} 
                       size={24} 
                       onClick={() => setRating(star)}
                       className={`cursor-pointer transition-colors ${
@@ -224,7 +218,13 @@ export default function GameDetail() {
             <div className="space-y-4">
               <AnimatePresence>
                 {reviews.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-[var(--color-text-secondary)] py-8 font-medium">
+                  <motion.div 
+                    key="empty-reviews"
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
+                    className="text-center text-[var(--color-text-secondary)] py-8 font-medium"
+                  >
                     No comm-link transmissions found. Be the first to review.
                   </motion.div>
                 ) : (
@@ -247,7 +247,7 @@ export default function GameDetail() {
                             </div>
                             <div className="flex mt-1">
                               {[1,2,3,4,5].map(star => (
-                                <Star key={star} size={14} className={star <= review.rating ? 'text-[var(--color-neon-cyan)] fill-[var(--color-neon-cyan)]' : 'text-[var(--color-vault-border)]'} />
+                                <Star key={`review-star-${star}`} size={14} className={star <= review.rating ? 'text-[var(--color-neon-cyan)] fill-[var(--color-neon-cyan)]' : 'text-[var(--color-vault-border)]'} />
                               ))}
                             </div>
                           </div>

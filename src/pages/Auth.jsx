@@ -13,9 +13,6 @@ export default function Auth() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // THE FIX: Self-Cleaning Mechanism
-  // This automatically purges any corrupted "ghost" tokens from previous tests
-  // the moment the login page mounts, ensuring a completely clean slate.
   useEffect(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -54,9 +51,6 @@ export default function Auth() {
       const response = await axios.post(url, payload);
       
       const { token, username, full_name } = response.data;
-
-      // Globally attach the new valid token to Axios for all subsequent requests
-      // This guarantees the 422 error cannot happen on the next page
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       login(token, {
@@ -80,7 +74,6 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-[var(--color-vault-black)]">
-      {/* Cinematic Background Elements */}
       <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-[var(--color-neon-cyan)]/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-[var(--color-neon-magenta)]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -105,6 +98,7 @@ export default function Auth() {
         <AnimatePresence>
           {error && (
             <motion.div 
+              key="error-box"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -120,6 +114,7 @@ export default function Auth() {
           <AnimatePresence>
             {!isLogin && (
               <motion.div 
+                key="register-fields"
                 initial={{ opacity: 0, height: 0 }} 
                 animate={{ opacity: 1, height: 'auto' }} 
                 exit={{ opacity: 0, height: 0 }}

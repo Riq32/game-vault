@@ -20,7 +20,6 @@ export default function Backlog() {
     if (!token) return navigate('/auth');
 
     try {
-      // Manual headers removed!
       const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/vault');
       setVaultItems(response.data);
     } catch (err) {
@@ -32,7 +31,6 @@ export default function Backlog() {
 
   const updateStatus = async (itemId, newStatus) => {
     try {
-      // Manual headers removed!
       const response = await axios.patch(
         `https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`,
         { status: newStatus }
@@ -40,7 +38,6 @@ export default function Backlog() {
       
       setVaultItems(vaultItems.map(item => item.id === itemId ? { ...item, status: newStatus } : item));
 
-      // Handle XP and Level Up Notifications
       if (response.data.gamification?.xp_gained > 0) {
         if (response.data.gamification.level_up) {
           setNotification({
@@ -64,7 +61,6 @@ export default function Backlog() {
 
   const removeGame = async (itemId) => {
     try {
-      // Manual headers removed!
       await axios.delete(`https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`);
       setVaultItems(vaultItems.filter(item => item.id !== itemId));
     } catch (err) {
@@ -82,6 +78,7 @@ export default function Backlog() {
       <AnimatePresence>
         {notification && (
           <motion.div 
+            key="gamification-toast"
             initial={{ opacity: 0, y: 50, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 20, x: '-50%' }}

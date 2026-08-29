@@ -24,7 +24,6 @@ export default function Profile() {
     const fetchProfileData = async () => {
       if (!token) return navigate('/auth');
       try {
-        // Manual headers removed!
         const response = await axios.get('https://game-vault-backend-n7ul.onrender.com/api/profile');
         setProfileData(response.data);
         setFormData({
@@ -33,7 +32,6 @@ export default function Profile() {
           profilePic: response.data.avatar_url || ''
         });
 
-        // Display Daily Login Notification
         if (response.data.streak?.reward_awarded > 0) {
           setDailyToast({
             title: response.data.streak.milestone ? 'WEEKLY STREAK BONUS' : 'DAILY LOGIN',
@@ -64,7 +62,6 @@ export default function Profile() {
         } else if (imagePayload.type === 'file') {
           const uploadData = new FormData();
           uploadData.append('image', imagePayload.data);
-          // Removed manual auth headers, kept Content-Type
           const uploadRes = await axios.post('https://game-vault-backend-n7ul.onrender.com/api/upload', uploadData, {
             headers: { 'Content-Type': 'multipart/form-data' } 
           });
@@ -74,7 +71,6 @@ export default function Profile() {
 
       const updatedProfile = { username: formData.displayName, email: formData.email, avatar_url: finalImageUrl };
       
-      // Manual headers removed!
       const response = await axios.patch('https://game-vault-backend-n7ul.onrender.com/api/profile', updatedProfile);
       
       setProfileData({ ...profileData, ...updatedProfile });
@@ -98,7 +94,13 @@ export default function Profile() {
       
       <AnimatePresence>
         {dailyToast && (
-          <motion.div initial={{ opacity: 0, y: -50, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }} exit={{ opacity: 0, y: -20, x: '-50%' }} className="fixed top-24 left-1/2 z-50 bg-[var(--color-vault-surface)] border-2 border-[var(--color-neon-cyan)] rounded-2xl p-4 flex items-center gap-4 shadow-[0_0_30px_rgba(0,240,255,0.3)]">
+          <motion.div 
+            key="daily-toast"
+            initial={{ opacity: 0, y: -50, x: '-50%' }} 
+            animate={{ opacity: 1, y: 0, x: '-50%' }} 
+            exit={{ opacity: 0, y: -20, x: '-50%' }} 
+            className="fixed top-24 left-1/2 z-50 bg-[var(--color-vault-surface)] border-2 border-[var(--color-neon-cyan)] rounded-2xl p-4 flex items-center gap-4 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+          >
             <Flame size={24} className="text-orange-500" />
             <div>
               <h4 className="font-black text-lg text-white uppercase tracking-widest">{dailyToast.title}</h4>
