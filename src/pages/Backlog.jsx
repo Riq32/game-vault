@@ -36,12 +36,12 @@ export default function Backlog() {
   const updateStatus = async (itemId, newStatus) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.put(
+      // Changed from PUT to PATCH to align with the new REST architecture
+      await axios.patch(
         `https://game-vault-backend-n7ul.onrender.com/api/vault/${itemId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Update UI locally to feel fast
       setVaultItems(vaultItems.map(item => item.id === itemId ? { ...item, status: newStatus } : item));
     } catch (err) {
       alert("Failed to update status.");
@@ -66,7 +66,6 @@ export default function Backlog() {
   return (
     <div className="min-h-screen bg-[var(--color-vault-black)] pt-32 pb-20 px-6">
       <div className="max-w-5xl mx-auto">
-        
         <h1 className="text-4xl font-black uppercase tracking-tighter mb-10 border-b border-[var(--color-vault-border)] pb-4">
           Personal <span className="text-[var(--color-neon-cyan)]">Vault</span>
         </h1>
@@ -93,7 +92,6 @@ export default function Backlog() {
                 >
                   <div className="flex justify-between items-start mb-6">
                     <h3 className="font-bold text-lg leading-tight truncate pr-4">{item.game_name}</h3>
-                    
                     <button 
                       onClick={() => removeGame(item.id)}
                       className="text-[var(--color-text-secondary)] hover:text-red-500 transition-colors bg-[var(--color-vault-black)] p-2 rounded-lg border border-[var(--color-vault-border)] hover:border-red-500"
@@ -104,7 +102,6 @@ export default function Backlog() {
                   
                   <div className="flex items-center justify-between border-t border-[var(--color-vault-border)] pt-4">
                     <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Status</span>
-                    
                     <select 
                       value={item.status}
                       onChange={(e) => updateStatus(item.id, e.target.value)}
