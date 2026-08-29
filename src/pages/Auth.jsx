@@ -1,21 +1,36 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogIn, UserPlus, AlertCircle, Terminal } from 'lucide-react';
+import { LogIn, UserPlus, AlertCircle, Terminal, Mail, Lock, User, BadgeCheck } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ username: '', password: '', dob: '' });
+  const [formData, setFormData] = useState({ fullName: '', username: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const validateForm = () => {
+    if (!isLogin && !formData.fullName.trim()) return "Full name is required.";
+    if (!isLogin && formData.username.trim().length < 3) return "Username must be at least 3 characters.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return "Invalid email format.";
+    if (formData.password.length < 6) return "Password must be at least 6 characters.";
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
 
     const url = isLogin 
@@ -23,10 +38,16 @@ export default function Auth() {
       : 'https://game-vault-backend-n7ul.onrender.com/api/register';
 
     try {
-      const payload = isLogin ? { username: formData.username, password: formData.password } : formData;
+      const payload = isLogin 
+        ? { email: formData.email, password: formData.password } 
+        : { full_name: formData.fullName, username: formData.username, email: formData.email, password: formData.password };
+        
       const response = await axios.post(url, payload);
       
-      login(response.data.access_token, response.data.user);
+      login(response.data.token, {
+        username: response.data.username,
+        full_name: response.data.full_name
+      });
       navigate(isLogin ? '/discover' : '/onboarding');
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed. Server unreachable.');
@@ -35,8 +56,15 @@ export default function Auth() {
     }
   };
 
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setError('');
+    setFormData({ fullName: '', username: '', email: '', password: '' });
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-[var(--color-vault-black)]">
+      {/* Cinematic Background Elements */}
       <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-[var(--color-neon-cyan)]/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-[var(--color-neon-magenta)]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -73,48 +101,70 @@ export default function Auth() {
         </AnimatePresence>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="relative group">
-            <input
-              type="text"
-              required
-              placeholder="Username"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
-            />
-          </div>
-
           <AnimatePresence>
             {!isLogin && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }} 
                 animate={{ opacity: 1, height: 'auto' }} 
                 exit={{ opacity: 0, height: 0 }}
-                className="relative group overflow-hidden"
+                className="space-y-5 overflow-hidden"
               >
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-[var(--color-text-secondary)] text-xs font-bold uppercase">DOB</span>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <BadgeCheck className="text-[var(--color-text-secondary)]" size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    required={!isLogin}
+                    placeholder="Legal / Full Name"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
+                  />
                 </div>
-                <input
-                  type="date"
-                  required={!isLogin}
-                  value={formData.dob}
-                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                  className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-16 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium"
-                  style={{ colorScheme: 'dark' }}
-                />
+
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User className="text-[var(--color-text-secondary)]" size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    required={!isLogin}
+                    placeholder="Operative Alias (Username)"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '') })}
+                    className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
           <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Mail className="text-[var(--color-text-secondary)]" size={18} />
+            </div>
+            <input
+              type="email"
+              required
+              placeholder="Transmission Link (Email)"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
+            />
+          </div>
+
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className="text-[var(--color-text-secondary)]" size={18} />
+            </div>
             <input
               type="password"
               required
-              placeholder="Password"
+              placeholder="Security Key (Password)"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
+              className="w-full bg-[var(--color-vault-black)] border border-[var(--color-vault-border)] text-[var(--color-text-primary)] rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[var(--color-neon-cyan)] focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all font-medium placeholder:text-zinc-600"
             />
           </div>
 
@@ -132,11 +182,7 @@ export default function Auth() {
             {isLogin ? "No vault access yet?" : "Already registered?"}
           </p>
           <button 
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-              setFormData({ username: '', password: '', dob: '' });
-            }} 
+            onClick={toggleMode} 
             className="text-[var(--color-neon-cyan)] font-bold uppercase tracking-widest text-xs mt-2 hover:text-white transition-colors"
           >
             {isLogin ? 'Create Identity' : 'Initialize Login'}
