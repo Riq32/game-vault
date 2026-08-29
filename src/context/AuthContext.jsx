@@ -4,65 +4,59 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => {
-    const savedToken = localStorage.getItem('token');
-    if (!savedToken || savedToken === 'undefined' || savedToken === 'null' || savedToken === '[object Object]') {
-      return null;
-    }
-    // Deep-clean the token in case it was previously corrupted
-    let cleanToken = savedToken.replace(/['"]+/g, '');
-    if (cleanToken.startsWith('Bearer ')) {
-        cleanToken = cleanToken.replace('Bearer ', '');
-    }
-    return cleanToken;
-  });
-  
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
     try {
-      return savedUser && savedUser !== 'undefined' && savedUser !== 'null' ? JSON.parse(savedUser) : null;
+      return JSON.parse(localStorage.getItem('user'));
     } catch (e) {
-      localStorage.removeItem('user');
       return null;
     }
   });
 
   useLayoutEffect(() => {
-    // 🛡️ MASTER REQUEST INTERCEPTOR
+    // 🛡️ REQUEST INTERCEPTOR: Aggressive Token Sanitizer
     const reqInterceptor = axios.interceptors.request.use((config) => {
       let currentToken = localStorage.getItem('token');
-
-      // Ensure headers object exists
       config.headers = config.headers || {};
-
-      if (currentToken && currentToken !== 'undefined' && currentToken !== 'null' && currentToken !== '[object Object]') {
-        // Deep-clean the token before attaching it to the header
-        currentToken = currentToken.replace(/['"]+/g, '');
+      
+      if (currentToken && currentToken !== 'undefined' && currentToken !== 'null') {
+        // Brutally scrub the token of any accidental quotes or double 'Bearer' prefixes
+        currentToken = String(currentToken).replace(/['"]+/g, '');
         if (currentToken.startsWith('Bearer ')) {
             currentToken = currentToken.replace('Bearer ', '');
         }
         config.headers['Authorization'] = `Bearer ${currentToken}`;
       } else {
-         // Safely delete if it somehow exists but the token is null
-         if (config.headers['Authorization']) {
-             delete config.headers['Authorization'];
-         }
+        delete config.headers['Authorization'];
       }
       return config;
     });
 
+    // 🛡️ RESPONSE INTERCEPTOR: The "Ghost Catcher"
+    const resInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // If the backend throws a 422, intercept it and fire a loud popup with the exact message
+        if (error.response && error.response.status === 422) {
+          // Extract the hidden message from Flask
+          const serverMessage = error.response.data?.msg || error.response.data?.error || JSON.stringify(error.response.data);
+          
+          alert(`SYSTEM HALT - Backend Error (422):\n\n"${serverMessage}"\n\nTell me exactly what this says!`);
+        }
+        return Promise.reject(error);
+      }
+    );
+
     return () => {
       axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
     };
   }, []);
 
   const login = (newToken, userData) => {
-    if (!newToken || newToken === 'undefined' || newToken === 'null') {
-      console.error("Authentication rejected: Invalid token payload received.");
-      return;
-    }
-
-    // Clean token before saving it to localStorage
+    if (!newToken || newToken === 'undefined' || newToken === 'null') return;
+    
+    // Clean token before saving to local storage
     let cleanToken = String(newToken).replace(/['"]+/g, '');
     if (cleanToken.startsWith('Bearer ')) {
         cleanToken = cleanToken.replace('Bearer ', '');
