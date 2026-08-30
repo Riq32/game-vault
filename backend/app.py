@@ -45,11 +45,7 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
 with app.app_context():
-    # ⚠️ TEMPORARY DATABASE WIPE TO FIX SCHEMA ⚠️
-    # Remove db.drop_all() after your first successful deployment!
-    db.drop_all()
-    
-    # Rebuilds the database fresh with all new columns
+     # Rebuilds the database fresh with all new columns
     db.create_all()
 
 # ==========================================
