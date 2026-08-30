@@ -1,89 +1,138 @@
-# 🎮 GameVault
+# Game Vault
 
-GameVault is a sleek, high-contrast digital library designed for PC and console gamers to discover new releases and seamlessly organize their gaming backlog. 
+**A Full-Stack Capstone Project**
 
-This application was developed as a Phase 1 capstone project by Enrique Pim.
+Game Vault is a centralized, gamified platform designed to help players track their video game backlogs, discover new titles, and engage with a community of fellow gamers. Built as a comprehensive Phase 3 Capstone Project, it bridges a dynamic React frontend with a robust, secure Flask backend to deliver a production-ready application.
 
-## 🎯 The Problem & Solution
-Gamers frequently buy titles across multiple platforms, lose track of their digital libraries, and suffer from choice paralysis when deciding what to play next. 
+This repository contains the complete frontend and backend codebase, demonstrating secure JWT-based user authentication, protected data management, external API integrations, and immersive UI/UX design.
 
-GameVault solves this by providing a unified, visually appealing dashboard powered by the RAWG Video Games Database API. Users can search for games, view high-resolution metadata, and categorize their personal library to always know exactly what masterpiece awaits them next.
+---
 
-## ✨ Features
-*   **Immersive Landing Experience:** A dynamic hero section introducing the core capabilities of the application.
-*   **Discover & Filter:** Browse trending games and filter through a massive catalog by genre.
-*   **Deep-Dive Metadata:** View high-resolution screenshots, release dates, descriptions, and Metacritic scores for millions of titles.
-*   **Library Management:** Save games to local storage and categorize them by status: *Want to Play*, *Currently Playing*, *Completed*, or *Dropped*.
-*   **High-Contrast UI:** Fully responsive, Apple-inspired interface featuring a custom dark/light mode toggle that overrides system preferences.
+## 🎯 The Business Problem & Solution
+
+**The Problem:**
+Modern gamers interact with countless gaming ecosystems (Steam, PlayStation, Xbox, Nintendo) but lack a unified, engaging platform to track their personal backlogs, discover critically acclaimed titles based on their specific preferences, and share reviews without dealing with fragmented, cluttered interfaces.
+
+**The Solution:**
+Game Vault serves as a single, secure nexus. It allows "Operatives" (users) to register securely, build a personalized tracking network (The Vault), earn XP and climb a global leaderboard for completing games, and interact with an AI-powered localization engine for international game data. It transforms backlog management from a chore into a rewarding, gamified experience.
+
+---
+
+## ✨ Core Features
+
+### Security & Authentication
+
+* **JWT Token-Based Auth:** Secure registration and login workflows using `Flask-JWT-Extended` and `bcrypt` password hashing.
+* **Protected Routes:** Both frontend React components and backend Flask endpoints are secured, ensuring users can only modify their own vault items, preferences, and profile data.
+* **Axios Interceptors:** Automated token attachment and silent session cleanup on token expiration.
+
+### User-Owned Data & Relationships (Data Models)
+
+* **Personalized Vaults (One-to-Many):** Users can add games to their backlog, update statuses (Playing, Completed), and remove them.
+* **Player Comm-Link (Reviews):** Users can leave star ratings and text reviews on specific games.
+* **Smart Directives (Preferences):** Users can save their favorite genres and platforms to receive algorithmic game matches.
+* **Notification System:** Real-time, user-specific notifications for leveling up, streak bonuses, and AI recommendations.
+
+### Advanced Integrations
+
+* **RAWG API:** Live fetching of global video game data, marketplace links, screenshots, and metadata.
+* **OpenAI API:** Integrated localization engine allowing users to instantly translate complex game descriptions into Japanese while preserving HTML formatting.
+* **File Uploads:** Secure multipart form data handling for custom user profile avatars.
+* **Gamification Engine:** Automated XP distribution, daily login streaks, and a dynamic top-100 global leaderboard.
+
+---
 
 ## 🛠️ Tech Stack
-*   **Frontend Framework:** React (with `react-router-dom` for client-side routing)
-*   **Build Tool:** Vite
-*   **Styling:** Tailwind CSS v4 (utilizing custom `@theme` configurations)
-*   **State Management:** Native React Hooks (`useState`, `useEffect`) and custom hooks (`useBacklog`, `useFetch`, `useTheme`) paired with browser `localStorage`.
-*   **External API:** RAWG Video Games Database API
-*   **Deployment:** Vercel
 
-## 🚀 Getting Started
+| Domain | Technologies |
+| --- | --- |
+| **Frontend** | React, React Router, Tailwind CSS, Framer Motion, Lucide React, Axios |
+| **Backend** | Python, Flask, Flask-SQLAlchemy, Flask-Bcrypt, Flask-JWT-Extended |
+| **Database** | SQLite (Development) / PostgreSQL (Production) |
+| **External APIs** | RAWG Video Games Database API, OpenAI API (gpt-3.5-turbo) |
+| **Deployment** | Vercel (Frontend), Render (Backend Web Service) |
 
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed on your machine. You will also need a free API key from [RAWG](https://rawg.io/apidocs).
+---
 
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/yourusername/game-vault.git](https://github.com/yourusername/game-vault.git)
-   cd game-vault
+## 🗄️ Backend API Architecture
 
-## 🌐 Phase 2: Full-Stack Production Architecture
+All backend endpoints are cleanly namespaced under `/api` to prevent routing conflicts with the React frontend during production deployment.
 
-The application has evolved into a comprehensive full-stack architecture, engineered as a Moringa Phase 2 project. This phase transitions the application from a local client-side tool into a robust, cloud-deployed production environment.
+* **Auth:** `POST /api/register`, `POST /api/login`
+* **User:** `GET /api/profile`, `PATCH /api/profile`
+* **Vault Data:** `GET /api/vault`, `POST /api/vault`, `PATCH /api/vault/<id>`, `DELETE /api/vault/<id>`
+* **Social/Reviews:** `GET /api/reviews/<game_id>`, `POST /api/reviews`
+* **Gamification:** `GET /api/leaderboard`, `GET /api/notifications`
+* **External/AI:** `GET /api/games`, `POST /api/translate`
 
-### 🛠️ Phase 2 Tech Stack
+---
 
-**Client-Side (Frontend)**
-*   **React 18 + Vite:** Lightning-fast rendering and build tooling.
-*   **Tailwind CSS v4:** Utility-first styling for a sleek, high-contrast interface.
-*   **Framer Motion:** Integrated for kinetic UI components, interactive splash animations, and onboarding filters.
-*   **Axios:** Promise-based HTTP client for seamless backend communication.
-*   **Vercel:** Edge-network deployment for the client application.
+## 🚀 Setup & Installation Instructions
 
-**Server-Side (Backend)**
-*   **Python 3 & Flask:** Lightweight, highly customizable RESTful API framework.
-*   **Gunicorn:** Production-grade Python WSGI HTTP Server.
-*   **PostgreSQL:** Relational database for persistent user data (configured with local SQLite fallback).
-*   **SQLAlchemy:** Object Relational Mapper (ORM) for database schema modeling.
-*   **Flask-Bcrypt & Flask-JWT-Extended:** Secure password hashing and stateless token-based authentication.
-*   **OpenAI API:** Neural link integration for server-side Japanese localization of game descriptions.
-*   **Render:** Fully managed cloud deployment for the backend web service and PostgreSQL database.
+To run Game Vault locally, you will need two terminal windows—one for the Flask backend and one for the React frontend.
 
-### 🔄 CRUD Operations & API Methods
+### 1. Clone the Repository
 
-Phase 2 implements full CRUD (Create, Read, Update, Delete) capabilities to manage global data, user identities, and personalized vaults:
+```bash
+git clone https://github.com/yourusername/game-vault.git
+cd game-vault
 
-*   **CREATE (POST)**
-    *   `/api/register`: Creates new user identities, securely hashing passwords with bcrypt.
-    *   `/api/login`: Authenticates users and generates JWT access tokens.
-    *   `/api/vault`: Adds a new game to the user's personal backlog.
-    *   `/api/reviews`: Submits a new user review and rating for a specific game.
-    *   `/api/preferences`: Saves hardware and genre preferences during onboarding.
+```
 
-*   **READ (GET)**
-    *   `/api/games`: Fetches the global transmission feed of games (proxied from RAWG). Includes pagination and search queries.
-    *   `/api/games/<id>`: Retrieves deep-dive metadata for a specific title.
-    *   `/api/profile`: Decrypts the JWT to fetch the current user's profile, vault statistics, and join date.
-    *   `/api/vault`: Retrieves all saved games associated with the authenticated user.
-    *   `/api/recommendations`: Calculates algorithmic matches based on the user's saved preferences.
+### 2. Backend Setup (Flask)
 
-*   **UPDATE (PUT)**
-    *   `/api/profile`: Modifies user identity parameters (display name, email, avatar URL).
-    *   `/api/vault/<id>`: Updates the tracking status of a saved game (e.g., shifting from "Backlog" to "Completed").
+```bash
+cd backend
 
-*   **DELETE (DELETE)**
-    *   `/api/vault/<id>`: Permanently removes a game from the user's vault.
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-### 🛡️ Phase 2 Architectural Advancements
+# Install dependencies
+pip install -r requirements.txt
 
-1.  **Resilient RAWG Proxy:** The backend acts as a secure proxy for the RAWG API, stripping away CORS restrictions and hiding the API key. It features an automated fallback mechanism that serves local mock data if the RAWG servers time out, ensuring UI stability.
-2.  **Stateless Authentication:** Transitioned from local storage faux-auth to secure, JWT-based routing.
-3.  **AI Localization:** Implemented a `/api/translate` route that leverages OpenAI (`gpt-3.5-turbo`) to translate raw HTML game descriptions into Japanese while preserving semantic markup perfectly.   
+# Set up environment variables
+# Create a .env file in the backend directory and add the following:
+SECRET_KEY=your_super_secret_jwt_key
+RAWG_API_KEY=your_rawg_api_key
+OPENAI_API_KEY=your_openai_api_key
+
+# Initialize the database and run the server
+python app.py
+
+```
+
+*The Flask server will start on `http://localhost:5000`.*
+
+### 3. Frontend Setup (React)
+
+Open a new terminal window.
+
+```bash
+cd frontend
+
+# Install Node modules
+npm install
+
+# Start the Vite development server
+npm run dev
+
+```
+
+*The React app will typically start on `http://localhost:5173`. Axios is configured to point requests to the backend server.*
+
+---
+
+## 🌍 Deployment
+
+Game Vault is engineered for cloud deployment:
+
+* **Backend:** Configured for Render using Gunicorn as the WSGI HTTP server (`gunicorn app:app`).
+* **Frontend:** Configured for Vercel.
+* *Note on CORS:* The Flask application utilizes `flask-cors` to explicitly allow communication from the frontend domain, ensuring smooth cross-origin requests.
+
+---
+
+**Architected by Enrique Pim**
+
+*Capstone Project — Demonstrating full-stack proficiency, RESTful API design, database modeling, and secure access control.*
