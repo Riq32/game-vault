@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
   });
 
   useLayoutEffect(() => {
-    // 🛡️ REQUEST INTERCEPTOR: Aggressive Token Sanitizer
+    // 🛡️ MASTER REQUEST INTERCEPTOR: Aggressive Token Sanitizer
     const reqInterceptor = axios.interceptors.request.use((config) => {
       let currentToken = localStorage.getItem('token');
       config.headers = config.headers || {};
@@ -32,16 +32,24 @@ export function AuthProvider({ children }) {
       return config;
     });
 
-    // 🛡️ RESPONSE INTERCEPTOR: The "Ghost Catcher"
+    // 🛡️ MASTER RESPONSE INTERCEPTOR: Silent Session Cleanup
     const resInterceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        // If the backend throws a 422, intercept it and fire a loud popup with the exact message
-        if (error.response && error.response.status === 422) {
-          // Extract the hidden message from Flask
-          const serverMessage = error.response.data?.msg || error.response.data?.error || JSON.stringify(error.response.data);
+        // Ignore errors from the login/register routes themselves
+        const isAuthRequest = error.config && error.config.url && 
+          (error.config.url.includes('/login') || error.config.url.includes('/register'));
+
+        // If the backend rejects the token (401 or 422) during normal app usage, log them out silently
+        if (!isAuthRequest && error.response && (error.response.status === 401 || error.response.status === 422)) {
+          console.warn("Session expired or invalid. Purging cache.");
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          delete axios.defaults.headers.common['Authorization'];
           
-          alert(`SYSTEM HALT - Backend Error (422):\n\n"${serverMessage}"\n\nTell me exactly what this says!`);
+          if (window.location.pathname !== '/auth') {
+            window.location.href = '/auth';
+          }
         }
         return Promise.reject(error);
       }
@@ -73,6 +81,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    window.location.href = '/auth';
   };
 
   const updateUser = (updatedData) => {
