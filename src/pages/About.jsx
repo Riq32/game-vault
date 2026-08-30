@@ -114,7 +114,7 @@ export default function About() {
           className="bg-gradient-to-r from-[var(--color-vault-surface)] to-[var(--color-vault-black)] border border-[var(--color-vault-border)] rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between"
         >
           <div>
-            <h2 className="text-3xl font-black uppercase tracking-tight mb-2">Phase 2 Architecture</h2>
+            <h2 className="text-3xl font-black uppercase tracking-tight mb-2">Full Stack Architecture</h2>
             <p className="text-[var(--color-text-secondary)]">React Frontend ↔ Flask (Python) Backend ↔ PostgreSQL</p>
           </div>
           <div className="mt-6 md:mt-0 text-[var(--color-neon-cyan)] font-bold tracking-widest uppercase text-sm border border-[var(--color-neon-cyan)] px-6 py-3 rounded-full shadow-[0_0_15px_rgba(0,240,255,0.2)] flex items-center gap-2">
