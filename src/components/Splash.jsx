@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Splash({ onComplete }) {
@@ -7,12 +7,28 @@ export default function Splash({ onComplete }) {
   const audioRef = useRef(null);
   const timerRef = useRef(null);
 
+  // 🛡️ FIX: Memoize particles so they don't randomly regenerate on state changes
+  const particles = useMemo(() => {
+    return Array.from({ length: 30 }).map((_, i) => ({
+      id: i,
+      size: Math.random() * 4 + 1,
+      x: Math.random() * 100 - 50,
+      duration: Math.random() * 2.5 + 2,
+      delay: Math.random() * 1.5
+    }));
+  }, []);
+
   useEffect(() => {
     audioRef.current = new Audio('/bass-impact.mp3');
     audioRef.current.volume = 0.7;
 
     return () => {
+      // 🛡️ FIX: Comprehensive memory cleanup on unmount
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, []);
 
@@ -35,19 +51,16 @@ export default function Splash({ onComplete }) {
   const handleSkip = (e) => {
     e.stopPropagation(); // Prevents triggering the background click
     setVisible(false);
+    
     if (audioRef.current) {
       audioRef.current.pause();
     }
+    
+    // 🛡️ FIX: Clear the timer so onComplete doesn't fire twice!
+    if (timerRef.current) clearTimeout(timerRef.current); 
+    
     setTimeout(onComplete, 800);
   };
-
-  const particles = Array.from({ length: 30 }).map((_, i) => ({
-    id: i,
-    size: Math.random() * 4 + 1,
-    x: Math.random() * 100 - 50,
-    duration: Math.random() * 2.5 + 2,
-    delay: Math.random() * 1.5
-  }));
 
   return (
     <AnimatePresence>
