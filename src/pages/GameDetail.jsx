@@ -99,7 +99,7 @@ export default function GameDetail() {
   return (
     <div className="bg-[var(--color-vault-black)] min-h-screen text-[var(--color-text-primary)] pb-24 relative">
       
-      {/* Floating Return Button */}
+      {/* Return Button */}
       <button 
         onClick={() => navigate('/discover')}
         className="absolute top-24 left-6 md:left-12 z-50 flex items-center gap-2 bg-[var(--color-vault-black)]/60 backdrop-blur-md border border-[var(--color-vault-border)] hover:border-[var(--color-neon-cyan)] text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:shadow-[0_0_15px_rgba(0,240,255,0.2)]"
