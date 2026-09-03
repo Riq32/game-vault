@@ -44,7 +44,6 @@ def generate_ml_recommendations(user_preferences_str, games_data, num_recommenda
     similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
 
     # 6. Add scores to our dataframe and sort
-    # Skip the first row because it's the user profile
     results_df = df.iloc[1:].copy()
     results_df['similarity'] = similarity_scores
     
