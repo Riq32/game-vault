@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ShoppingCart, Languages, MessageSquare, Calendar, ImageIcon, Loader2 } from 'lucide-react';
+import { Star, ShoppingCart, Languages, MessageSquare, Calendar, ImageIcon, Loader2, ArrowLeft } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import { fetchGameDetails } from '../api'; 
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -11,6 +11,7 @@ import ShareMenu from '../components/ShareMenu';
 
 export default function GameDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { data: game, loading, error } = useFetch(() => fetchGameDetails(id), id);
   
   const [isTranslated, setIsTranslated] = useState(true);
@@ -96,7 +97,16 @@ export default function GameDetail() {
   };
 
   return (
-    <div className="bg-[var(--color-vault-black)] min-h-screen text-[var(--color-text-primary)] pb-24">
+    <div className="bg-[var(--color-vault-black)] min-h-screen text-[var(--color-text-primary)] pb-24 relative">
+      
+      {/* Floating Return Button */}
+      <button 
+        onClick={() => navigate('/discover')}
+        className="absolute top-24 left-6 md:left-12 z-50 flex items-center gap-2 bg-[var(--color-vault-black)]/60 backdrop-blur-md border border-[var(--color-vault-border)] hover:border-[var(--color-neon-cyan)] text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+      >
+        <ArrowLeft size={16} /> Return to Discover
+      </button>
+
       <div className="relative w-full h-[60vh] md:h-[75vh] bg-black overflow-hidden">
         {game.clip ? (
           <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-60">
