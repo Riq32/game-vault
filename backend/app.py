@@ -10,6 +10,8 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import openai
 
+# 🛡️ IMPORT THE MACHINE LEARNING ENGINE
+from ml_engine import generate_ml_recommendations
 from models import db, User, VaultItem, Review, Preference, Notification
 
 # ==========================================
@@ -45,7 +47,7 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
 with app.app_context():
-     # Rebuilds the database fresh with all new columns
+    # Safely creates tables if they do not exist
     db.create_all()
 
 # ==========================================
@@ -125,7 +127,6 @@ def register():
     db.session.add(new_user)
     db.session.commit()
     
-    # 🛡️ FIX: Added str(new_user.id)
     return jsonify({"token": create_access_token(identity=str(new_user.id)), "username": new_user.username, "full_name": new_user.full_name}), 201
 
 @app.route('/api/login', methods=['POST', 'OPTIONS'])
@@ -135,7 +136,6 @@ def login():
     data = request.get_json()
     user = User.query.filter_by(email=data.get('email')).first()
     if user and bcrypt.check_password_hash(user.password_hash, data.get('password')):
-        # 🛡️ FIX: Added str(user.id)
         return jsonify({"token": create_access_token(identity=str(user.id)), "username": user.username, "full_name": user.full_name}), 200
     return jsonify({"error": "Invalid credentials"}), 401
 
@@ -254,7 +254,6 @@ def get_leaderboard():
     if request.method == 'OPTIONS': return jsonify({}), 200
     
     current_user_id = get_jwt_identity()
-    # Handle the fact that get_jwt_identity now returns a string
     current_user_id_int = int(current_user_id) if current_user_id else None
 
     users = User.query.order_by(User.xp.desc(), User.current_streak.desc()).limit(100).all()
@@ -351,7 +350,7 @@ def save_preferences():
     return jsonify({"message": "Directives saved"}), 200
 
 # ==========================================
-# 6. EXTERNAL PROXIES (RAWG & AI), FILE I/O & REVIEWS
+# 6. EXTERNAL PROXIES (RAWG & AI & ML), FILE I/O & REVIEWS
 # ==========================================
 @app.route('/api/games', methods=['GET', 'OPTIONS'])
 def get_games():
@@ -386,6 +385,7 @@ def get_game_details(game_id):
     except requests.exceptions.RequestException:
         return jsonify({"error": "Target intellectual property not found."}), 404
 
+# 🛡️ THE NEW MACHINE LEARNING ENDPOINT
 @app.route('/api/recommendations', methods=['GET', 'OPTIONS'])
 @jwt_required(optional=True)
 def get_recommendations():
@@ -394,15 +394,25 @@ def get_recommendations():
     user_id = get_jwt_identity()
     pref = Preference.query.filter_by(user_id=user_id).first() if user_id else None
     
-    tags = "singleplayer"
-    if pref and pref.genres:
-        tags = pref.genres.split(',')[0].lower()
+    # Default search profile if the user hasn't onboarded yet
+    user_pref_string = "action rpg singleplayer" 
+    
+    if pref:
+        # Combine their exact genres and platforms into a single ML search profile
+        user_pref_string = f"{pref.genres} {pref.platforms}"
 
     try:
-        url = f"https://api.rawg.io/api/games?key={RAWG_API_KEY}&tags={tags}&ordering=-rating&page_size=4"
+        # 1. Fetch a broad pool of top-rated games from RAWG (pulling 40 to give the ML engine enough data to sort)
+        url = f"https://api.rawg.io/api/games?key={RAWG_API_KEY}&ordering=-rating&page_size=40"
         response = requests.get(url, timeout=10)
-        return jsonify(response.json().get('results', [])), 200
-    except:
+        broad_games_pool = response.json().get('results', [])
+
+        # 2. Pass the broad pool and the user's specific text string into the ML engine
+        ml_sorted_games = generate_ml_recommendations(user_pref_string, broad_games_pool, num_recommendations=8)
+
+        return jsonify(ml_sorted_games), 200
+    except Exception as e:
+        print(f"ML Engine Error: {e}")
         return jsonify([]), 200
 
 @app.route('/api/reviews', methods=['POST', 'OPTIONS'])
