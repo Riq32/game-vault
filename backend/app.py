@@ -8,7 +8,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-import openai
+from openai import OpenAI
 
 # 🛡️ IMPORT THE MACHINE LEARNING ENGINE
 from ml_engine import generate_ml_recommendations
@@ -34,7 +34,6 @@ app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY', 'super-secure-dev-key-123
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
 RAWG_API_KEY = os.getenv('RAWG_API_KEY')
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
@@ -458,18 +457,22 @@ def get_reviews(game_id):
         "date": r.created_at.strftime("%Y-%m-%d")
     } for r in reviews]), 200
 
+# 🛡️ UPDATED: OpenAI v1.0+ Translation Endpoint
 @app.route('/api/translate', methods=['POST', 'OPTIONS'])
 def translate_description():
     if request.method == 'OPTIONS': return jsonify({}), 200
     
     data = request.get_json()
     text_to_translate = data.get('text', '')
+    api_key = os.getenv('OPENAI_API_KEY')
     
-    if not text_to_translate or not openai.api_key:
+    if not text_to_translate or not api_key:
         return jsonify({"error": "Missing text or Neural Link key"}), 400
         
     try:
-        response = openai.ChatCompletion.create(
+        client = OpenAI(api_key=api_key)
+        
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a professional video game localization engine. Translate the following HTML description into Japanese. You MUST perfectly preserve all HTML tags, structure, and formatting. Do not translate the tags themselves."},
@@ -480,6 +483,7 @@ def translate_description():
         )
         return jsonify({"translated_text": response.choices[0].message.content.strip()}), 200
     except Exception as e:
+        print(f"OpenAI Error: {str(e)}") 
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
