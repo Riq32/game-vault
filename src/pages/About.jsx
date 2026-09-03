@@ -156,7 +156,7 @@ export default function About() {
           ))}
         </motion.div>
 
-        {/* System Architecture Banner */}
+        {/* System Architecture  */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
