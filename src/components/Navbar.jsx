@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, User, Bell, Trophy } from 'lucide-react';
+import { Search, Menu, X, User, Bell, Trophy, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext'; 
 import axios from 'axios';
@@ -13,7 +13,7 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   
   const location = useLocation();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth(); // Extracted logout from AuthContext
 
   // Scroll physics for glassmorphism effect
   useEffect(() => {
@@ -108,6 +108,15 @@ export default function Navbar() {
                 )}
                 {user.displayName || user.username}
               </Link>
+
+              {/* Logout Button (Desktop) */}
+              <button 
+                onClick={logout}
+                className="text-[var(--color-text-secondary)] hover:text-red-500 transition-colors flex items-center justify-center"
+                title="Disconnect"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
           ) : (
             <Link to="/auth" className="bg-transparent border border-[var(--color-neon-cyan)] text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)] hover:text-black px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,240,255,0.1)] hover:shadow-[0_0_20px_rgba(0,240,255,0.4)]">
@@ -173,6 +182,14 @@ export default function Navbar() {
                     <NotificationPanel isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
                   </div>
                 </div>
+
+                {/* Logout Button (Mobile) */}
+                <button 
+                  onClick={logout}
+                  className="bg-transparent border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white text-center py-3 rounded-xl font-black uppercase tracking-widest mt-2 transition-all flex items-center justify-center gap-2"
+                >
+                  <LogOut size={18} /> Sign Out
+                </button>
               </>
             ) : (
               <Link to="/auth" className="bg-[var(--color-neon-cyan)] text-black text-center py-3 rounded-xl font-black uppercase tracking-widest mt-2">
