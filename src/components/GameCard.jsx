@@ -1,7 +1,7 @@
 // src/components/GameCard.jsx
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Star } from 'lucide-react';
+import { Star, ArrowLeft } from 'lucide-react';
 
 export default function GameCard({ game }) {
   return (
@@ -49,12 +49,25 @@ export default function GameCard({ game }) {
             {game.released ? new Date(game.released).getFullYear() : 'TBA'}
           </span>
           
-          <Link 
-            to={`/game/${game.id}`}
-            className="flex items-center gap-1 text-xs font-black text-[var(--color-text-primary)] bg-[var(--color-vault-border)] hover:bg-[var(--color-neon-cyan)] hover:text-[var(--color-vault-black)] px-4 py-2 rounded-full transition-colors uppercase tracking-wider"
-          >
-            Details
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* Back to Discover Button */}
+            <Link
+              to="/discover"
+              className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-neon-cyan)] border border-[var(--color-vault-border)] hover:border-[var(--color-neon-cyan)]/50 px-3 py-2 rounded-full transition-colors uppercase tracking-wider"
+              title="Return to Discover"
+            >
+              <ArrowLeft size={12} />
+              <span>Back</span>
+            </Link>
+
+            {/* View Details Button */}
+            <Link 
+              to={`/game/${game.id}`}
+              className="flex items-center gap-1 text-xs font-black text-[var(--color-text-primary)] bg-[var(--color-vault-border)] hover:bg-[var(--color-neon-cyan)] hover:text-[var(--color-vault-black)] px-4 py-2 rounded-full transition-colors uppercase tracking-wider"
+            >
+              Details
+            </Link>
+          </div>
         </div>
       </div>
     </motion.div>
